@@ -1,12 +1,11 @@
 import json
+import logging
 import warnings
 from pathlib import Path
 from typing import Optional
 
-from loguru import logger
 import numpy as np
 import pandas as pd
-import typer
 from tqdm import tqdm
 
 
@@ -14,12 +13,17 @@ from tqdm import tqdm
 # we will ignore it
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-RUNTIME_PATH = Path(__file__).parents[1].resolve()
-DATA_PATH = RUNTIME_PATH.parent / "data"
-DEFAULT_SUBMISSION_FORMAT = RUNTIME_PATH / "submission_format.csv"
-DEFAULT_INCIDENTS = DATA_PATH / "incidents.csv"
-DEFAULT_PARAMS = DATA_PATH / "parameters.json"
-DEFAULT_OUTPUT = RUNTIME_PATH / "submission.csv"
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
+ROOT_DIRECTORY = Path("/codeexecution")
+RUNTIME_DIRECTORY = ROOT_DIRECTORY / "submission"
+DATA_DIRECTORY = ROOT_DIRECTORY / "data"
+
+DEFAULT_SUBMISSION_FORMAT = DATA_DIRECTORY / "submission_format.csv"
+DEFAULT_INCIDENTS = DATA_DIRECTORY / "incidents.csv"
+DEFAULT_PARAMS = DATA_DIRECTORY / "parameters.json"
+DEFAULT_OUTPUT = ROOT_DIRECTORY / "submission.csv"
 
 
 def naively_add_laplace_noise(arr, scale: float, seed: int = None):
@@ -139,4 +143,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()

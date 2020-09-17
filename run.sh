@@ -7,8 +7,8 @@ if [ -f .env ]; then
 fi
 
 # test configuration
-docker rm -f deid2-submission
-docker build --build-arg -t deid2/codeexecution runtime
+docker rm -f deid2-submission || true
+docker build -t deid2/codeexecution runtime
 docker run \
        --name deid2-submission \
        --network none \
