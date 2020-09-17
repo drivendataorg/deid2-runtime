@@ -1,18 +1,17 @@
-FROM nvidia/cuda:10.1-base-ubuntu18.04
+FROM nvidia/cuda:11.0-base-ubuntu20.04
 
+# non-interactive package installs by setting these up front
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ARG CPU_GPU=gpu
+ENV TZ=UTC
+ARG DEBIAN_FRONTEND=noninteractive
+
+ARG CPU_OR_GPU=gpu
 
 RUN apt-get update --fix-missing && \
     apt-get install --no-install-recommends -y \
         build-essential \
         git \
-        glib2.0-dev \
-        libexpat1-dev \
         libglu1-mesa \
-        libgsf-1-dev \
-        libjpeg-turbo8-dev \
-        libtiff5-dev \
         pkg-config \
         software-properties-common \
         unzip \
@@ -21,39 +20,38 @@ RUN apt-get update --fix-missing && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /usr/local/src/*
 
-RUN wget https://github.com/libvips/libvips/releases/download/v8.9.2/vips-8.9.2.tar.gz && \
-    tar xvf vips-8.9.2.tar.gz && \
-    cd vips-8.9.2 && \
-    ./configure && \
-    make && \
-    make install && \
-    ldconfig
-
-
-# Limited User
+# Limited user
 RUN groupadd -g 999 appuser && \
     useradd -r -u 1000 -g appuser appuser
 
-RUN mkdir /envs /home/appuser /inference && \
-    chown -R appuser /opt /envs /home/appuser /inference
-
-COPY ./entrypoint.sh /inference/entrypoint.sh
-RUN chmod +x /inference/entrypoint.sh
+RUN mkdir /codeexecution /envs /home/appuser && \
+    chown -R appuser /codeexecution /envs /home/appuser /opt
 
 USER 1000
 
-# install miniconda as system python
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O /opt/miniconda.sh && \
-    /bin/bash /opt/miniconda.sh -b -p /opt/conda
+# Install Miniconda as system Python
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p ~/miniconda
 
-ENV PATH /opt/conda/bin:$PATH
-COPY *.yml /envs/
-COPY ./package-installs*.R /envs/
+ENV PATH ~/miniconda/bin:$PATH
 
-# create Python environment
-RUN conda update conda && \
-    conda env create -f /envs/py-${CPU_GPU}.yml && \
-    conda clean -a -y
+# Create Python environment
+COPY ./py-${CPU_OR_GPU}.yml /envs/
+RUN ~/miniconda/bin/conda update conda -y && \
+    ~/miniconda/bin/conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
+    ~/miniconda/bin/conda clean -a -y
+
+# Create R environment
+COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
+RUN ~/miniconda/bin/conda update conda -y && \
+    ~/miniconda/bin/conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
+    ~/miniconda/bin/conda clean -a -y && \
+    ~/miniconda/bin/conda clean -f -y && \
+    ~/miniconda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
+
+COPY --chown=appuser:appuser entrypoint.sh /codeexecution/entrypoint.sh
+COPY --chown=appuser:appuser scripts/metric.py scripts/score.py /codeexecution/scripts/
+COPY --chown=appuser:appuser tests /codeexecution/tests/
 
 # Execute the entrypoint.sh script inside the container when we do docker run
-CMD ["/bin/bash", "/inference/entrypoint.sh"]
+CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]

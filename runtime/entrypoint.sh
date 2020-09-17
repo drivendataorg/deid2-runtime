@@ -1,35 +1,43 @@
 #!/bin/bash
 
-processor="gpu"
 exit_code=0
 
 {
-    cd /inference
+    cd /codeexecution
 
-    # check for gpu with nvidia-smi
+    # Check for gpu with nvidia-smi
     if [ $(which nvidia-smi) ]
     then
-        :
+	processor="gpu"
     else
-        echo "GPU unavailable; falling back to CPU."
         processor="cpu"
     fi
+    echo "Running $processor image"
 
     echo "Unpacking submission..."
     unzip ./submission/submission.zip -d ./
 
     if [ -f "main.py" ]
     then
-        source activate py-$processor
         echo "Running submission with Python"
-        python main.py
+        conda run -n py-$processor python main.py
     elif [ -f "main.R" ]
     then
-        source activate r-$processor
         echo "Running submission with R"
-        R -f main.R
+        conda run -n r-$processor Rscript main.R
+    elif [ -f "main" ]
+    then
+	if [ $(stat -c %A main | cut -c4) = "x" ]
+	then
+            echo "Running submission binary"
+            ./main
+	else
+	    echo -e "ERROR: main is not executable. Please run:\n\n\tchmod u+x main\n\nbefore creating your submission."
+	    exit_code==1
+	fi
+
     else
-        echo "ERROR: Could not find main.py or main.R in submission.zip"
+        echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
     fi
 
@@ -45,9 +53,15 @@ exit_code=0
         exit_code=1
     fi
 
+    # Test that submission is valid
+    conda run -n py-$processor pytest -v
+
+    # Score the submission
+    conda run -n py-$processor python scripts/score.py
+
     echo "================ END ================"
-} |& tee "/inference/submission/log.txt"
+} |& tee "/codeexecution/submission/log.txt"
 
 # copy for additional log uses
-cp /inference/submission/log.txt /tmp/log
+cp /codeexecution/submission/log.txt /tmp/log
 exit $exit_code
