@@ -35,10 +35,9 @@ If you would like to locally run our CI test (this requires [Docker](https://www
 ```bash
 docker build -t deid2/codeexecution runtime
 docker run \
-    --mount type=bind,source=$(pwd)/runtime/run-tests.sh,target=/run-tests.sh,readonly \
     --mount type=bind,source=$(pwd)/runtime/tests,target=/tests,readonly \
     deid2/codeexecution \
-    /bin/bash -c "bash /run-tests.sh"
+    /bin/bash -c "source activate py-cpu; python /tests/test_installs.py"
 ```
 
 ### Opening a pull request

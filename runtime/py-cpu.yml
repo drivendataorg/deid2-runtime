@@ -5,14 +5,15 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - fastai
-  - lightgbm
-  - pandas
-  - py-xgboost
-  - python
-  - python-dotenv
-  - pytorch
-  - scikit-learn
-  - scipy
-  - tensorflow
-  - xgboost
+  - fastai=2.0.13=py_0
+  - lightgbm=3.0.0=py37h3340039_0
+  - pandas=1.1.2=py37h3340039_0
+  - py-xgboost=1.2.0=py37hc8dfbb8_0
+  - python=3.7.8=h6f2ec95_1_cpython
+  - python-dotenv=0.14.0=pyh9f0ad1d_0
+  - pytorch=1.6.0=py3.7_cuda10.2.89_cudnn7.6.5_0
+  - scikit-learn=0.23.2=py37h6785257_0
+  - scipy=1.5.2=py37hb14ef9d_0
+  - tensorflow=1.14.0=h4531e10_0
+  - xgboost=1.2.0=py37h3340039_0
+prefix: /opt/conda/envs/py-cpu
