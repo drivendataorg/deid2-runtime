@@ -34,10 +34,10 @@ If you would like to locally run our CI test (this requires [Docker](https://www
 
 ```bash
 CPU_GPU=cpu  # or 'gpu' to use GPU
-docker build --build-arg CPU_GPU=$CPU_GPU -t deid2/inference runtime
+docker build --build-arg CPU_GPU=$CPU_GPU -t deid2/codeexecution runtime
 docker run --mount type=bind,source=$(pwd)/runtime/run-tests.sh,target=/run-tests.sh,readonly \
                   --mount type=bind,source=$(pwd)/runtime/tests,target=/tests,readonly \
-                  deid2/inference \
+                  deid2/codeexecution \
                   /bin/bash -c "bash /run-tests.sh $CPU_GPU"
 ```
 
@@ -52,15 +52,15 @@ You may be asked to submit revisions to your pull request if the tests fail, or 
 
 ## Testing your submission locally
 
-It is a good idea to test your submission locally using [Docker](https://docs.docker.com/get-docker/) before submitting to the platform. For a Python submission, place your code and model assets into `benchmark/inference-py` and test images in `inference-data`:
+It is a good idea to test your submission locally using [Docker](https://docs.docker.com/get-docker/) before submitting to the platform. For a Python submission, place your code and model assets into `benchmark/run-py` and test images in `data`:
 
 ```
-├── benchmark/inference-py
+├── benchmark/run-py
 │    ├── assets
 │    │   ├── model.json
 │    │   └── weights.h5
 │    └── main.py
-└── inference-data
+└── data
     ├── submission_format.csv
     ├── test_images
     │   ├── slide1.tif

@@ -4,7 +4,7 @@ processor="gpu"
 exit_code=0
 
 {
-    cd /inference
+    cd /codeexecution
 
     # check for gpu with nvidia-smi
     if [ $(which nvidia-smi) ]
@@ -46,8 +46,8 @@ exit_code=0
     fi
 
     echo "================ END ================"
-} |& tee "/inference/submission/log.txt"
+} |& tee "/codeexecution/submission/log.txt"
 
 # copy for additional log uses
-cp /inference/submission/log.txt /tmp/log
+cp /codeexecution/submission/log.txt /tmp/log
 exit $exit_code
