@@ -1,0 +1,18 @@
+name: r-gpu
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - imagemagick=7.0.8_64=pl526h51306e4_0
+  - opencv=4.1.1=py36h0cc45ee_2
+  - python=3.6.7=h357f687_1005
+  - pillow=6.1.0=py36h34e0f95_0
+  - r-base=3.6.1=hba50c9b_4
+  - r-essentials=3.6=r36_2001
+  - r-futile.logger=1.4.3=r36h6115d3f_1002
+  - r-keras=2.2.4.1=r36h6115d3f_1
+  - r-magick=2.2=r36h0357c0b_0
+  - r-tensorflow=1.14.0=r36h6115d3f_0
+  - tensorflow-gpu=1.14.0
+  - pandas=0.25.1=py36he6710b0_0
+prefix: /opt/conda/envs/r-gpu
