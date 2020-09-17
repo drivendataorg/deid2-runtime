@@ -18,9 +18,6 @@ def main(
     submission_format = pd.read_csv(submission, index_col=INDEX_COLS)
     logger.info(f"read dataframe with {len(submission_format):,} rows")
 
-    logger.info("validating the submission")
-    pytest.main(["-x", ".", "--submission-file", "submission.csv"])
-
     logger.info(f"reading ground truth from {ground_truth} ...")
     ground_truth = pd.read_csv(ground_truth, index_col=INDEX_COLS)
     logger.info(f"read dataframe with {len(ground_truth):,} rows")
