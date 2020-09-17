@@ -17,7 +17,7 @@ pr:
 
 variables:
   containerRegistry: competitioncodeexecutionprod
-  imageName: sfp-cervical-biopsy
+  imageName: deid2
     
 jobs:
 - job: publish_runtime_container

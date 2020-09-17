@@ -1,6 +1,6 @@
-# Société Française de Pathologie: Cervical Biopsy Challenge
+# NIST De-ID2 Challenge
 
-This repository contains runtime configuration for the [SFP Cervical Biopsy Challenge](https://www.drivendata.org/) competition, as well as example benchmark solutions.
+This repository contains runtime configuration for the [NIST De-ID2 Challenge](https://www.drivendata.org/) competition, as well as example benchmark solutions.
 
 ## Adding dependencies to the runtime
 
@@ -34,10 +34,10 @@ If you would like to locally run our CI test (this requires [Docker](https://www
 
 ```bash
 CPU_GPU=cpu  # or 'gpu' to use GPU
-docker build --build-arg CPU_GPU=$CPU_GPU -t sfp-cervical-biopsy/inference runtime
+docker build --build-arg CPU_GPU=$CPU_GPU -t deid2/inference runtime
 docker run --mount type=bind,source=$(pwd)/runtime/run-tests.sh,target=/run-tests.sh,readonly \
                   --mount type=bind,source=$(pwd)/runtime/tests,target=/tests,readonly \
-                  sfp-cervical-biopsy/inference \
+                  deid2/inference \
                   /bin/bash -c "bash /run-tests.sh $CPU_GPU"
 ```
 
