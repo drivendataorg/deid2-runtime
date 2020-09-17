@@ -20,4 +20,4 @@ if [ -f submission/submission.zip ]; then
 fi
 
 # prepare submission
-cd benchmark/inference-$lang/; zip -r ../../submission/submission.zip ./*; cd ../..
+cd benchmark/run-$lang/; zip -r ../../submission/submission.zip ./*; cd ../..

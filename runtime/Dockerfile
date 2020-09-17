@@ -34,11 +34,11 @@ RUN wget https://github.com/libvips/libvips/releases/download/v8.9.2/vips-8.9.2.
 RUN groupadd -g 999 appuser && \
     useradd -r -u 1000 -g appuser appuser
 
-RUN mkdir /envs /home/appuser /inference && \
-    chown -R appuser /opt /envs /home/appuser /inference
+RUN mkdir /envs /home/appuser /codeexecution && \
+    chown -R appuser /opt /envs /home/appuser /codeexecution
 
-COPY ./entrypoint.sh /inference/entrypoint.sh
-RUN chmod +x /inference/entrypoint.sh
+COPY ./entrypoint.sh /codeexecution/entrypoint.sh
+RUN chmod +x /codeexecution/entrypoint.sh
 
 USER 1000
 
@@ -56,4 +56,4 @@ RUN conda update conda && \
     conda clean -a -y
 
 # Execute the entrypoint.sh script inside the container when we do docker run
-CMD ["/bin/bash", "/inference/entrypoint.sh"]
+CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]
