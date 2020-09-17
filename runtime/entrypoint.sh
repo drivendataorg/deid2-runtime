@@ -1,31 +1,21 @@
 #!/bin/bash
 
-processor="gpu"
 exit_code=0
 
 {
     cd /codeexecution
-
-    # check for gpu with nvidia-smi
-    if [ $(which nvidia-smi) ]
-    then
-        :
-    else
-        echo "GPU unavailable; falling back to CPU."
-        processor="cpu"
-    fi
 
     echo "Unpacking submission..."
     unzip ./submission/submission.zip -d ./
 
     if [ -f "main.py" ]
     then
-        source activate py-$processor
+        source activate py-cpu
         echo "Running submission with Python"
         python main.py
     elif [ -f "main.R" ]
     then
-        source activate r-$processor
+        source activate r-cpu
         echo "Running submission with R"
         R -f main.R
     else

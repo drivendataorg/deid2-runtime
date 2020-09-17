@@ -1,18 +1,11 @@
-FROM nvidia/cuda:10.1-base-ubuntu18.04
+FROM continuumio/miniconda:4.7.12
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ARG CPU_GPU=gpu
 
 RUN apt-get update --fix-missing && \
     apt-get install --no-install-recommends -y \
         build-essential \
         git \
-        glib2.0-dev \
-        libexpat1-dev \
-        libglu1-mesa \
-        libgsf-1-dev \
-        libjpeg-turbo8-dev \
-        libtiff5-dev \
         pkg-config \
         software-properties-common \
         unzip \
@@ -21,16 +14,7 @@ RUN apt-get update --fix-missing && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /usr/local/src/*
 
-RUN wget https://github.com/libvips/libvips/releases/download/v8.9.2/vips-8.9.2.tar.gz && \
-    tar xvf vips-8.9.2.tar.gz && \
-    cd vips-8.9.2 && \
-    ./configure && \
-    make && \
-    make install && \
-    ldconfig
-
-
-# Limited User
+# Limited user
 RUN groupadd -g 999 appuser && \
     useradd -r -u 1000 -g appuser appuser
 
@@ -42,18 +26,19 @@ RUN chmod +x /codeexecution/entrypoint.sh
 
 USER 1000
 
-# install miniconda as system python
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O /opt/miniconda.sh && \
-    /bin/bash /opt/miniconda.sh -b -p /opt/conda
+COPY py-cpu.yml r-cpu.yml package-installs-cpu.R /envs/
 
-ENV PATH /opt/conda/bin:$PATH
-COPY *.yml /envs/
-COPY ./package-installs*.R /envs/
-
-# create Python environment
-RUN conda update conda && \
-    conda env create -f /envs/py-${CPU_GPU}.yml && \
+# Create Python environment
+RUN conda update conda -y && \
+    conda env create -f /envs/py-cpu.yml && \
     conda clean -a -y
+
+# Create R environment
+RUN conda update conda -y && \
+    conda env create -f /envs/r-cpu.yml && \
+    conda clean -a -y && \
+    conda clean -f -y && \
+    /opt/conda/envs/r-cpu/bin/R -f /envs/package-installs-cpu.R
 
 # Execute the entrypoint.sh script inside the container when we do docker run
 CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]

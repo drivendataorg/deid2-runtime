@@ -34,7 +34,7 @@ jobs:
       docker login -u $(containerRegistry) -p $(dockerPassword) $(containerRegistry).azurecr.io
       docker push $(containerRegistry).azurecr.io/$(imageName):$(Build.SourceVersion)
     displayName: 'Build and deploy Docker container'
-- job: test_gpu_installs
+- job: test_installs
   condition: ne(variables['build.sourceBranch'], 'refs/heads/master')
   pool:
     vmImage: 'ubuntu-latest'
@@ -43,24 +43,9 @@ jobs:
   steps:
   - script: |
       cd runtime
-      docker build --build-arg CPU_GPU=gpu -t $(containerRegistry)/$(imageName):$(Build.SourceVersion) .
+      docker build -t $(containerRegistry)/$(imageName):$(Build.SourceVersion) .
       docker run --mount type=bind,source=$(pwd)/run-tests.sh,target=/run-tests.sh,readonly \
                   --mount type=bind,source=$(pwd)/tests,target=/tests,readonly \
                   $(containerRegistry)/$(imageName):$(Build.SourceVersion) \
-                  /bin/bash -c "bash /run-tests.sh gpu"
-    displayName: 'Test installs for GPU environment'
-- job: test_cpu_installs
-  condition: ne(variables['build.sourceBranch'], 'refs/heads/master')
-  pool:
-    vmImage: 'ubuntu-latest'
-  timeoutInMinutes: 360
-  cancelTimeoutInMinutes: 90
-  steps:
-  - script: |
-      cd runtime
-      docker build --build-arg CPU_GPU=cpu -t $(containerRegistry)/$(imageName):$(Build.SourceVersion) .
-      docker run --mount type=bind,source=$(pwd)/run-tests.sh,target=/run-tests.sh,readonly \
-                  --mount type=bind,source=$(pwd)/tests,target=/tests,readonly \
-                  $(containerRegistry)/$(imageName):$(Build.SourceVersion) \
-                  /bin/bash -c "bash /run-tests.sh cpu"
-    displayName: 'Test installs for CPU environment'
+                  /bin/bash -c "bash /run-tests.sh"
+    displayName: 'Test installs'
