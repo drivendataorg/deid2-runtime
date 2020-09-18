@@ -123,10 +123,10 @@ As mentioned, when you execute the container locally, we will mount two subfolde
 
 Your `submission.zip` file must exist in the `submission` folder on your host machine in order to be processed when you are testing execution locally.
 
-Use `make pack-benchmark` to create your submission. It takes a `LANGUAGE` argument that can be either `python` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the example submission and put it into the submission folder, run:
+Use `make pack-benchmark` to create your submission. It takes a `LANGUAGE` argument that can be either `py` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the example submission and put it into the submission folder, run:
 
 ```bash
-make pack-benchmark LANGUAGE=python
+make pack-benchmark LANGUAGE=py
 ```
 
 When you run this in the future, you should check and remove any existing `submission/submission.zip` file. The `make pack-benchmark` command does not overwrite this file (so we won't accidentally lose your work).

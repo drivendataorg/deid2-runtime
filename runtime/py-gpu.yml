@@ -9,6 +9,7 @@ dependencies:
   - lightgbm=3.0.0=py38h950e882_0
   - pandas=1.1.2=py38h950e882_0
   - py-xgboost=1.2.0=py38h32f6830_0
+  - pytest=6.0.2=py38h32f6830_0
   - python=3.8.5=h1103e12_8_cpython
   - python-dotenv=0.14.0=pyh9f0ad1d_0
   - pytorch=1.6.0=py3.8_cuda10.1.243_cudnn7.6.3_0

@@ -11,7 +11,7 @@ CPU_OR_GPU = gpu
 GPU_ARGS = --gpus all
 endif
 
-LANGUAGE = python
+LANGUAGE = py
 
 REPO = drivendata/deid2-competition
 
