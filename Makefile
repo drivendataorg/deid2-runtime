@@ -1,4 +1,4 @@
-.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements resolve-python-requirements export-python-requirements export-r-requirements resolve-r-requirements test-submission sample-images pack-benchmark
+.PHONY: build pull test-container debug-container unpin-requirements export-requirements resolve-python-requirements resolve-r-requirements test-submission sample-images pack-benchmark
 
 # ================================================================================================
 # Settings
@@ -11,7 +11,9 @@ CPU_OR_GPU = gpu
 GPU_ARGS = --gpus all
 endif
 
-REPO = drivendataorg/deid2-runtime
+LANGUAGE = python
+
+REPO = drivendata/deid2-competition
 
 TAG = ${CPU_OR_GPU}-latest
 LOCAL_TAG = ${CPU_OR_GPU}-local
@@ -65,29 +67,18 @@ debug-container: build _submission_write_perms
 		/bin/bash
 
 ## Remove specific version pins from Python conda environment YAML
-unpin-python-requirements:
-	sed -i 's/=.*$$//' runtime/py-${CPU_OR_GPU}.yml
+unpin-requirements:
+	@echo "Unpinning requirements for ${LANGUAGE}-${CPU_OR_GPU}"
+	sed -i 's/=.*$$//' runtime/${LANGUAGE}-${CPU_OR_GPU}.yml
 
-## Remove specific version pins from R conda environment YAML
-unpin-r-requirements:
-	sed -i 's/=.*$$//' runtime/r-${CPU_OR_GPU}.yml
-
-## Export the Python conda environment YAML from the container
-export-python-requirements:
+## Export the conda environment YAML from the container
+export-requirements:
+	@echo "Exporting requirements for ${LANGUAGE}-${CPU_OR_GPU}"
 	docker run \
 		-a stdout \
 		${LOCAL_IMAGE} \
-		/bin/bash -c "conda env export -n py-${CPU_OR_GPU}" \
-		> runtime/py-${CPU_OR_GPU}.yml
-
-## Export the R conda environment YAML from the container
-export-r-requirements:
-	docker run \
-		-a stdout \
-		${LOCAL_IMAGE} \
-		/bin/bash -c "conda env export -n r-${CPU_OR_GPU}" \
-		> runtime/r-${CPU_OR_GPU}.yml
-
+		/bin/bash -c "conda env export -n ${LANGUAGE}-${CPU_OR_GPU}" \
+		> runtime/${LANGUAGE}-${CPU_OR_GPU}.yml
 
 ## Resolve the Python dependencies inside the container and write out to the host environment YAML file
 resolve-python-requirements: build export-python-requirements
@@ -104,9 +95,9 @@ resolve-r-requirements: build export-r-requirements
 pull:
 	docker pull ${IMAGE}
 
-## Download the 3 sample images from inference-data/test_metadata.csv (300 MB)
-data/inference.csv:
-	echo "Download the inference.csv"
+## Download the incidents dataset
+data/incidents.csv:
+	echo "Download the incidents.csv"
 
 ## Creates a submission/submission.zip file from whatever is in the "benchmark" folder
 pack-benchmark:
@@ -114,11 +105,10 @@ pack-benchmark:
 ifneq (,$(wildcard ./submission/submission.zip))
 	$(error You already have a submission/submission.zip file. Rename or remove that file (e.g., rm submission/submission.zip).)
 endif
+	cd benchmark/${LANGUAGE}; zip -r ../submission/submission.zip ./*
 
-	cd benchmark; zip -r ../submission/submission.zip ./*
 
-
-## Runs container with submission/submission.zip as your submission and inference-data as the data to work with
+## Runs container with submission/submission.zip as your submission and data as the data to work with
 test-submission: _submission_write_perms
 
 # if submission file does not exist
@@ -137,8 +127,8 @@ endif
 		${TTY_ARGS} \
 		${GPU_ARGS} \
 		--network none \
-		--mount type=bind,source=$(shell pwd)/inference-data,target=/inference/data,readonly \
-		--mount type=bind,source=$(shell pwd)/submission,target=/inference/submission \
+		--mount type=bind,source=$(shell pwd)/data,target=/codeexecution/data,readonly \
+		--mount type=bind,source=$(shell pwd)/submission,target=/codeexecution/submission \
 	   	--shm-size 8g \
 		${SUBMISSION_IMAGE}
 
