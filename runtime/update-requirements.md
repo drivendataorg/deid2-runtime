@@ -1,24 +1,21 @@
 # Updating requirements
 
-If you are creating a conda environment YAML file from an existing file, you may want to update all (or most) of the packages to the most recent versions. This is trickier than it might seem, since you ideally want to compile the requirements from inside the runtime container. Here is a workflow to accomplish that, along with a few helpful scripts. (This typically only needs to be done once at the beginning of the competition.)
+If you are creating a conda environment YAML file from an existing file, you may want to update all (or most) of the packages to the most recent versions. This is trickier than it might seem, since you ideally want to compile the requirements from inside the runtime container. The `Makefile` contains a few helpful commands to accomplish that. (This typically only needs to be done once at the beginning of the competition.)
 
-First, remove all of the version pins from the existing YAML files.
+The first step is to "unpin" all of the package versions in the existing YAML files, i.e., go from something like `scipy=1.5.2=py38h8c5af15_0` to `scipy`. The following commands will overwrite the Python and R environment YAML files in `runtime`.
 
 ```bash
-sed -i 's/=.*$//' runtime/py-cpu.yml
-sed -i 's/=.*$//' runtime/py-gpu.yml
-sed -i 's/=.*$//' runtime/r-cpu.yml
-sed -i 's/=.*$//' runtime/r-gpu.yml
+make unpin-python-requirements
+make unpin-r-requirements
 ```
 
-You can edit the YAML files to manually pin any desired versions.
+Now you can edit the environment YAML files to pin any desired versions. Note that you can be as specific as you want, e.g., `scipy==1`, `scipy==1.5`, `scipy==1.5.2`, or `scipy=1.5.2=py38h8c5af15_0`.
 
-Now, build the container. In the process of creating the conda environment, conda will perform dependency resolution to compile your unpinned dependencies to pinned dependencies. Export the environment file (including pinned dependencies) and save out to a file.
+The next commands will build the container, letting `conda` perform "dependency resolution", i.e., select specific versions of each package that all work together. The command also overwrite the existing environment YAML with a new file containing pinned versions.
 
 ```bash
-make build
 make update-python-requirements
 make update-r-requirements
 ```
 
-The resulting YAMLs contain a _complete_ list of the packages in your environment (including subdependencies of the packages you specified). While this is great for reproducibility, it is a bit overdetermined―it increases the chance that any new package added will have a dependency conflict with the existing pinned packages. It is better to only pin the versions of the top-level packages you want, and then let conda dependency resolver find subdependencies that work with everything. Manually edit `py-cpu.yml` to only include the pinned versions of the partial list of top-level packages you want to include.
+The new environment YAML file contains a _complete_ list of the packages in the environment (including subdependencies of the the specified packages). While this is great for reproducibility, it is a bit overdetermined―it increases the chance that any new package added will have a dependency conflict with the existing pinned packages. It is better to only pin the versions of the top-level packages you want, and then let conda dependency resolver find subdependencies that work with everything. Manually edit the environment YAML files to only include the pinned versions of the partial list of top-level packages you want to include.

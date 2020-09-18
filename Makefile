@@ -1,4 +1,4 @@
-.PHONY: build pull test-container debug-container test-submission sample-images pack-benchmark
+.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements update-python-requirements update-r-requirements test-submission sample-images pack-benchmark
 
 # ================================================================================================
 # Settings
@@ -65,10 +65,10 @@ debug-container: build _submission_write_perms
 		/bin/bash
 
 unpin-python-requirements:
-	sed -i 's/=.*$//' runtime/py-${CPU_OR_GPU}.yml
+	sed -i 's/=.*$$//' runtime/py-${CPU_OR_GPU}.yml
 
 unpin-r-requirements:
-	sed -i 's/=.*$//' runtime/r-${CPU_OR_GPU}.yml
+	sed -i 's/=.*$$//' runtime/r-${CPU_OR_GPU}.yml
 
 update-python-requirements: build
 	docker run \
