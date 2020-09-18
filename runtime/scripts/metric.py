@@ -49,19 +49,22 @@ class Deid2Metric:
         n_perms, _ = actual.shape
         scores = np.zeros(n_perms, dtype=np.float)
         for i in range(n_perms):
-            scores[i] = np.sum(self._score_counts(actual[i, :], predicted[i, :]))
+            scores[i] = 1 - np.sum(self._score_counts(actual[i, :], predicted[i, :]))
         return scores
 
     def score(self, actual, predicted, return_individual_scores=False):
         # make sure the submitted values are proper
         assert np.isfinite(predicted).all()
         assert (predicted >= 0).all()
+
         # get all of the individual scores
         raw_scores = self._score_all(actual, predicted)
+
         # clip all the scores to [0, 1]
         scores = np.clip(raw_scores, a_min=0.0, a_max=1.0)
-        # sum them up and multiply by 1000
-        overall_score = np.sum(scores) * 1000
+
+        # take the mean and multiply by 1000
+        overall_score = np.mean(scores) * 1000
 
         # in some uses (like visualization), it's useful to get the individual scores out too
         if return_individual_scores:
