@@ -27,10 +27,6 @@ jobs:
         run: |
           make pack-benchmark
 
-      - name: Test retreiving sample images
-        run: |
-          make sample-images
-  
       - name: Pull latest image and run submission in container
         run: |
           make pull
