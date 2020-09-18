@@ -1,6 +1,6 @@
 # Updating all requirements
 
-If you are creating a conda environment YAML file from an existing file, you may want to update all (or most) of the packages to the most recent versions. This is trickier than it might seem, since you ideally want to compile the requirements from inside the runtime container. The `Makefile` contains a few helpful commands to accomplish that. **Note: This typically only needs to be done once at the beginning of the competition―participants should focus on updating one or a few requirements at a time using the instructions [here](README.md/#2-updating-the-runtime-packages).**
+If you are creating a conda environment YAML file from an existing file, you may want to update all (or most) of the packages to the most recent versions. This is trickier than it might seem, since you ideally want to compile the requirements from inside the runtime container. The `Makefile` contains a few helpful commands to accomplish that. **Note: This typically only needs to be done once at the beginning of the competition―participants should focus on updating one or a few requirements at a time using the instructions [here](../README.md/#2-updating-the-runtime-packages).**
 
 The first step is to "unpin" all of the package versions in the existing YAML files, i.e., go from something like `scipy=1.5.2=py38h8c5af15_0` to `scipy`. The following commands will overwrite the Python and R environment YAML files in `runtime`.
 
