@@ -37,16 +37,17 @@ COPY ./Miniconda3-py37_4.8.3-Linux-x86_64.sh /opt/miniconda.sh
 RUN /bin/bash /opt/miniconda.sh -b -p /opt/conda
 
 ENV PATH /opt/conda/bin:$PATH
-COPY ./py-${CPU_OR_GPU}.yml ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
 
 # Create Python environment
+COPY ./py-${CPU_OR_GPU}.yml /envs/
 RUN conda update conda -y && \
     conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
     conda clean -a -y
 
 # Create R environment
+COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
 RUN conda update conda -y && \
-    conda env create -f /envs/r-cpu.yml && \
+    conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
     conda clean -a -y && \
     conda clean -f -y && \
     /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R

@@ -1,4 +1,4 @@
-name: py-cpu
+name: py-gpu
 channels:
   - pytorch
   - fastai
@@ -14,6 +14,7 @@ dependencies:
   - pytorch
   - scikit-learn
   - scipy
-  - tensorflow
+  - tensorflow-gpu
+  - torchvision
   - xgboost
-prefix: /opt/conda/envs/py-cpu
+prefix: /opt/conda/envs/py-gpu
