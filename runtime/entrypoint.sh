@@ -1,25 +1,38 @@
 #!/bin/bash
 
+processor="gpu"
 exit_code=0
 
 {
     cd /codeexecution
+
+    # Check for gpu with nvidia-smi
+    if [ $(which nvidia-smi) ]
+    then
+        :
+    else
+        echo "GPU unavailable; falling back to CPU."
+        processor="cpu"
+    fi
 
     echo "Unpacking submission..."
     unzip ./submission/submission.zip -d ./
 
     if [ -f "main.py" ]
     then
-        source activate py-cpu
+        source activate py-$processor
         echo "Running submission with Python"
         python main.py
     elif [ -f "main.R" ]
     then
-        source activate r-cpu
-        echo "Running submission with R"
-        R -f main.R
+	source activate r-$processor
+	echo "Running submission with R"
+    elif [ -f "main" ]
+    then
+	echo "Running submission binary"
+	main
     else
-        echo "ERROR: Could not find main.py or main.R in submission.zip"
+        echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
     fi
 
