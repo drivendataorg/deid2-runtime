@@ -1,4 +1,4 @@
-.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements update-python-requirements export-python-requirements export-r-requirements update-r-requirements test-submission sample-images pack-benchmark
+.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements resolve-python-requirements export-python-requirements export-r-requirements resolve-r-requirements test-submission sample-images pack-benchmark
 
 # ================================================================================================
 # Settings
@@ -64,12 +64,15 @@ debug-container: build _submission_write_perms
 		${LOCAL_IMAGE} \
 		/bin/bash
 
+## Remove specific version pins from Python conda environment YAML
 unpin-python-requirements:
 	sed -i 's/=.*$$//' runtime/py-${CPU_OR_GPU}.yml
 
+## Remove specific version pins from R conda environment YAML
 unpin-r-requirements:
 	sed -i 's/=.*$$//' runtime/r-${CPU_OR_GPU}.yml
 
+## Export the Python conda environment YAML from the container
 export-python-requirements:
 	docker run \
 		-a stdout \
@@ -77,6 +80,7 @@ export-python-requirements:
 		/bin/bash -c "conda env export -n py-${CPU_OR_GPU}" \
 		> runtime/py-${CPU_OR_GPU}.yml
 
+## Export the R conda environment YAML from the container
 export-r-requirements:
 	docker run \
 		-a stdout \
@@ -84,9 +88,12 @@ export-r-requirements:
 		/bin/bash -c "conda env export -n r-${CPU_OR_GPU}" \
 		> runtime/r-${CPU_OR_GPU}.yml
 
-update-python-requirements: build export-python-requirements
 
-update-r-requirements: build export-r-requirements
+## Resolve the Python dependencies inside the container and write out to the host environment YAML file
+resolve-python-requirements: build export-python-requirements
+
+## Resolve the R dependencies inside the container and write out to the host environment YAML file
+resolve-r-requirements: build export-r-requirements
 
 
 # ================================================================================================

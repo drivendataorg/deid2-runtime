@@ -14,8 +14,8 @@ Now you can edit the environment YAML files to pin any desired versions. Note th
 The next commands will build the container, letting `conda` perform "dependency resolution", i.e., select specific versions of each package that all work together. The command also overwrite the existing environment YAML with a new file containing pinned versions.
 
 ```bash
-make update-python-requirements
-make update-r-requirements
+make resolve-python-requirements
+make resolve-r-requirements
 ```
 
 The new environment YAML file contains a _complete_ list of the packages in the environment (including subdependencies of the the specified packages). While this is great for reproducibility, it is a bit overdetermined―it increases the chance that any new package added will have a dependency conflict with the existing pinned packages. It is better to only pin the versions of the top-level packages you want, and then let conda dependency resolver find subdependencies that work with everything. Manually edit the environment YAML files to only include the pinned versions of the partial list of top-level packages you want to include.
