@@ -27,14 +27,9 @@ RUN groupadd -g 999 appuser && \
 RUN mkdir /envs /home/appuser /codeexecution && \
     chown -R appuser /opt /envs /home/appuser /codeexecution
 
-COPY ./entrypoint.sh /codeexecution/entrypoint.sh
-RUN chmod +x /codeexecution/entrypoint.sh
-
-USER 1000
-
 # install miniconda as system python
-COPY ./Miniconda3-py37_4.8.3-Linux-x86_64.sh /opt/miniconda.sh 
-RUN /bin/bash /opt/miniconda.sh -b -p /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O /opt/miniconda.sh && \
+	/bin/bash /opt/miniconda.sh -b -p /opt/conda
 
 ENV PATH /opt/conda/bin:$PATH
 
@@ -44,13 +39,18 @@ RUN conda update conda -y && \
     conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
     conda clean -a -y
 
-# Create R environment
-COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
-RUN conda update conda -y && \
-    conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
-    conda clean -a -y && \
-    conda clean -f -y && \
-    /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
+# # Create R environment
+# COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
+# RUN conda update conda -y && \
+#     conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
+#     conda clean -a -y && \
+#     conda clean -f -y && \
+#     /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
+
+COPY ./entrypoint.sh /codeexecution/entrypoint.sh
+RUN chmod +x /codeexecution/entrypoint.sh
+
+USER 1000
 
 # Execute the entrypoint.sh script inside the container when we do docker run
 CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]
