@@ -3,22 +3,22 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 import pytest
 
-RUNTIME_PATH = Path(__file__).parents[1]
-ROOT_PATH = RUNTIME_PATH.parent
-PARAMETERS_PATH = ROOT_PATH / "data/parameters.json"
-INCIDENT_DF_PATH = ROOT_PATH / "data/incidents.csv"
-SUBMISSION_PATHS = RUNTIME_PATH.glob("**/submission*.csv")
+ROOT_DIRECTORY = Path("/codeexecution")
+RUNTIME_DIRECTORY = ROOT_DIRECTORY / "submission"
+DATA_DIRECTORY = ROOT_DIRECTORY / "data"
+PARAMETERS_PATH = DATA_DIRECTORY / "parameters.json"
+INCIDENT_DF_PATH = DATA_DIRECTORY / "incidents.csv"
+SUBMISSION_PATH = ROOT_DIRECTORY / "submission.csv"
 
 
 @pytest.fixture(scope="session")
-def submission(request):
-    submission_path = request.config.getoption("--submission-path")
-    path = Path(submission_path)
-    assert path.exists()
-    return pd.read_csv(submission_path, index_col=["epsilon", "neighborhood", "year", "month"])
+def submission():
+    assert SUBMISSION_PATH.exists()
+    return pd.read_csv(
+        SUBMISSION_PATH, index_col=["epsilon", "neighborhood", "year", "month"]
+    )
 
 
 @pytest.fixture(scope="session")
@@ -65,7 +65,9 @@ def test_data_types_match(submission):
 
 
 def test_all_values_are_finite(submission):
-    assert np.isfinite(submission.values).all(), "Count values must be finite (not NaN or inf)"
+    assert np.isfinite(
+        submission.values
+    ).all(), "Count values must be finite (not NaN or inf)"
 
 
 def test_all_values_are_nonzero(submission):

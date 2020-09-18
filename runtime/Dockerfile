@@ -39,16 +39,19 @@ RUN conda update conda -y && \
     conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
     conda clean -a -y
 
-# # Create R environment
-# COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
-# RUN conda update conda -y && \
-#     conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
-#     conda clean -a -y && \
-#     conda clean -f -y && \
-#     /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
+# Create R environment
+COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
+RUN conda update conda -y && \
+    conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
+    conda clean -a -y && \
+    conda clean -f -y && \
+    /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
 
 COPY ./entrypoint.sh /codeexecution/entrypoint.sh
 RUN chmod +x /codeexecution/entrypoint.sh
+
+COPY ./tests/test_submission.py /codeexecution/tests/test_submission.py
+COPY ./scripts/metric.py ./scripts/score.py ./scripts/create_ground_truth.py /codeexecution/
 
 USER 1000
 

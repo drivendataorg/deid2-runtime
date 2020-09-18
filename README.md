@@ -2,7 +2,7 @@
 
 ![Python 3.8](https://img.shields.io/badge/Python-3.8-blue) [![GPU Docker Image](https://img.shields.io/badge/Docker%20image-gpu--latest-green)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=gpu-latest) [![CPU Docker Image](https://img.shields.io/badge/Docker%20image-cpu--latest-lightgrey)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=cpu-latest) 
 
-Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions). This repo contains the definition of the environment where your code submissions will run. It specifies both the operating system and the Python packages that will be available to your solution.
+Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1). This repo contains the definition of the environment where your code submissions will run. It specifies both the operating system and the Python packages that will be available to your solution.
 
 This repository has two primary uses for competitors:
 
@@ -39,7 +39,8 @@ Make sure you have the prerequisites installed.
  - GNU make (optional, but useful for using the commands in the Makefile)
 
 Additional requirements to run with GPU:
- - [NVIDIA drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation) (we check whether you have `nvidia-smi` installed and enabled to automatically determine whether to build the cpu or gpu image)
+
+ - [NVIDIA drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation) with CUDA 11 (we check whether you have `nvidia-smi` installed and enabled to automatically determine whether to build the CPU or GPU image)
  - [NVIDIA Docker container runtime](https://nvidia.github.io/nvidia-container-runtime/)
 
 ### Quickstart
@@ -48,7 +49,6 @@ To test out the full execution pipeline, run the following commands in order in 
 
 ```
 make pull
-make sample-images
 make pack-benchmark
 make test-submission
 ```
@@ -77,6 +77,7 @@ Script completed its run.
 Running `make` at the terminal will tell you all the commands available in the repository:
 
 ```
+TODO: replace
 Settings based on your machine:
 CPU_OR_GPU=cpu 			# Whether or not to try to build, download, and run GPU versions
 SUBMISSION_IMAGE=925a59ad1b19 	# ID of the image that will be used when running test-submission
@@ -103,7 +104,7 @@ To find out more about what these commands do, keep reading! :eyes:
 
 In order to test your code submission, you will need a code submission! You will need to train your model separately before creating your `submission.zip` file that will run your code.
 
-**NOTE: You WILL implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions as we do in the runtime definition ([cpu](runtime/py-cpu.yml) or [gpu](runtime/py-gpu.yml)). They can be installed with `conda`.**
+**NOTE: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
 
 The [submission format page](https://www.drivendata.org/competitions/TODO) contains the detailed information you need to prepare your submission.
 
@@ -111,17 +112,9 @@ The [submission format page](https://www.drivendata.org/competitions/TODO) conta
 
 Your submission will run inside a virtual operating system within the container that Docker runs on your machine (your computer is the "host" for the container). Within that virtual operating system, `/codeexecution/data` will point to whatever is in your host machine's `data` folder. `/codeexecution/submission` will point to whatever is in your host machine's `submission` folder.
 
-The script to execute the submission will unzip the contents of `/codeexecution/submission/submssion.zip` into the `/codeexecution` folder. This should create a `main.py` file at `/codeexecution/main.py`.
+The script to execute the submission will unzip the contents of `/codeexecution/submission/submssion.zip` into the `/codeexecution` folder. This should create a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`.
 
-TODO: We will then run a Python process in `/codeexecution` to execute the `main.py` extracted from `submission.zip`. This `main.py` should read the `submission_format.csv` and `TODO.csv` files from `/codeexecution/data`. On the DrivenData platform, `/codeexecution/data` will have the actual test images, and the matching `submission_format.csv` and `TODO.csv`. In this repo, the `make sample-images` command will download 3 images from the training set that match the metadata and submission_format provided in this repo. You can use these 3 images to ensure your submission runs, but the metadata, submission format, and images on the DrivenData platform will be the actual test set. (You could use whatever images you want from the training set for local testing as long as they are in the `data` folder and the corresponding entries for those files are in `data/TODO.csv` and `data/submission_format.csv`.
-
-There is an example [`TODO.csv`](data/TODO.csv) in this repo that is actually just three rows from the `train_metadata.csv`, which is available on the competition [Data Download](https://www.drivendata.org/competitions/TODO) page. You should note that the actual `TODO.csv` in the production container does not have all of the same columns available. The details of what columns are available in the can be found on the [Problem Description](https://www.drivendata.org/competitions/TODO) page. 
-
-Running this command will download three images (~300 MB) to `infernce-data`. You can see which images will be downloaded by looking at [`TODO.csv`](data/TODO.csv). You can run a submission against these images for testing, after you download them by running:
-
-```bash
-make sample-images
-```
+Your code should read the `submission_format.csv` and `TODO.csv` files from `/codeexecution/data`. On the DrivenData platform, `/codeexecution/data` will have the actual test images, and the matching `submission_format.csv` and `TODO.csv`.
 
 As mentioned, when you execute the container locally, we will mount two subfolders in this repository into the containter:
 
@@ -130,10 +123,10 @@ As mentioned, when you execute the container locally, we will mount two subfolde
 
 Your `submission.zip` file must exist in the `submission` folder on your host machine in order to be processed when you are testing execution locally.
 
-The `make pack-benchmark` command will create a zipfile of everything in the `benchmark` folder and save that to `submission/submission.zip`. To prepare the example submission and put it into the submission folder, just run this command:
+Use `make pack-benchmark` to create your submission. It takes a `LANGUAGE` argument that can be either `python` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the example submission and put it into the submission folder, run:
 
 ```bash
-make pack-benchmark
+make pack-benchmark LANGUAGE=python
 ```
 
 When you run this in the future, you should check and remove any existing `submission/submission.zip` file. The `make pack-benchmark` command does not overwrite this file (so we won't accidentally lose your work).

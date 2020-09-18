@@ -48,6 +48,15 @@ exit_code=0
         exit_code=1
     fi
 
+    deactivate
+    conda activate py-$processor
+
+    # Test that submission is valid
+    pytest
+
+    # Score the submission
+    python score.py
+
     echo "================ END ================"
 } |& tee "/codeexecution/submission/log.txt"
 
