@@ -62,3 +62,6 @@ coverage.xml
 src.egg-info/
 pip-wheel-metadata/
 *.egg-info/
+
+# Submissions
+submission/
