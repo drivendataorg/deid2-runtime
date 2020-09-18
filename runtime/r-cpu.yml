@@ -11,4 +11,4 @@ dependencies:
   - r-keras
   - r-tensorflow
   - tensorflow
-prefix: /opt/conda/envs/r-gpu
+prefix: /opt/conda/envs/r-cpu

@@ -9,7 +9,7 @@ dependencies:
   - lightgbm
   - pandas
   - py-xgboost
-  - python==3.8
+  - python==3.8.5
   - python-dotenv
   - pytorch
   - scikit-learn

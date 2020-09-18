@@ -16,18 +16,9 @@ You can edit the YAML files to manually pin any desired versions.
 Now, build the container. In the process of creating the conda environment, conda will perform dependency resolution to compile your unpinned dependencies to pinned dependencies. Export the environment file (including pinned dependencies) and save out to a file.
 
 ```bash
-CPU_OR_GPU=cpu
-docker build -t deid2/codeexecution runtime
-docker run \
-       -a stdout \
-       deid2/codeexecution \
-       /bin/bash -c "conda env export -n py-${CPU_OR_GPU}" \
-    > runtime/py-${CPU_OR_GPU}.yml
-docker run \
-       -a stdout \
-       deid2/codeexecution \
-       /bin/bash -c "conda env export -n r-${CPU_OR_GPU}" \
-    > runtime/r-${CPU_OR_GPU}.yml
+make build
+make update-python-requirements
+make update-r-requirements
 ```
 
 The resulting YAMLs contain a _complete_ list of the packages in your environment (including subdependencies of the packages you specified). While this is great for reproducibility, it is a bit overdetermined―it increases the chance that any new package added will have a dependency conflict with the existing pinned packages. It is better to only pin the versions of the top-level packages you want, and then let conda dependency resolver find subdependencies that work with everything. Manually edit `py-cpu.yml` to only include the pinned versions of the partial list of top-level packages you want to include.
