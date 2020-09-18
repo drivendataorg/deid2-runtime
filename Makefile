@@ -1,4 +1,4 @@
-.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements update-python-requirements update-r-requirements test-submission sample-images pack-benchmark
+.PHONY: build pull test-container debug-container unpin-python-requirements unpin-r-requirements update-python-requirements export-python-requirements export-r-requirements update-r-requirements test-submission sample-images pack-benchmark
 
 # ================================================================================================
 # Settings
@@ -70,19 +70,23 @@ unpin-python-requirements:
 unpin-r-requirements:
 	sed -i 's/=.*$$//' runtime/r-${CPU_OR_GPU}.yml
 
-update-python-requirements: build
+export-python-requirements:
 	docker run \
 		-a stdout \
 		${LOCAL_IMAGE} \
 		/bin/bash -c "conda env export -n py-${CPU_OR_GPU}" \
 		> runtime/py-${CPU_OR_GPU}.yml
 
-update-r-requirements: build
+export-r-requirements:
 	docker run \
 		-a stdout \
 		${LOCAL_IMAGE} \
 		/bin/bash -c "conda env export -n r-${CPU_OR_GPU}" \
 		> runtime/r-${CPU_OR_GPU}.yml
+
+update-python-requirements: build export-python-requirements
+
+update-r-requirements: build export-r-requirements
 
 
 # ================================================================================================
