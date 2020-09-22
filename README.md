@@ -2,7 +2,7 @@
 
 ![Python 3.8](https://img.shields.io/badge/Python-3.8-blue) [![GPU Docker Image](https://img.shields.io/badge/Docker%20image-gpu--latest-green)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=gpu-latest) [![CPU Docker Image](https://img.shields.io/badge/Docker%20image-cpu--latest-lightgrey)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=cpu-latest) 
 
-Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1). This repo contains the definition of the environment where your code submissions will run. It specifies both the operating system and the Python packages that will be available to your solution.
+Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1). This repository contains the definition of the environment where your code submissions will run. It specifies both the operating system and the software packages that will be available to your solution.
 
 This repository has two primary uses for competitors:
 
@@ -56,44 +56,81 @@ make test-submission
 You should see output like this in the end (and find the same logs in the folder `submission/log.txt`):
 
 ```
-TODO: replace
+➜ make pack-benchmark
+cd benchmark/py; zip -r ../../submission/submission.zip ./*
+  adding: main.py (deflated 63%)
+
+➜ make test-submission
+chmod -R 0777 submission/
 docker run \
-		--network none \
-		--mount type=bind,source=/Users/bull/code/sfp-cervical-biopsy-runtime/data,target=/codeexecution/data,readonly \
-		--mount type=bind,source=/Users/bull/code/sfp-cervical-biopsy-runtime/submission,target=/codeexecution/submission \
-	   	--shm-size 8g \
-		925a59ad1b19
+        -it \
+         \
+        --network none \
+        --mount type=bind,source=/home/robert/projects/deid2-runtime/data,target=/codeexecution/data,readonly \
+        --mount type=bind,source=/home/robert/projects/deid2-runtime/submission,target=/codeexecution/submission \
+        --shm-size 8g \
+        b09bce29f1c9
 GPU unavailable; falling back to CPU.
 Unpacking submission...
 Archive:  ./submission/submission.zip
-   creating: ./assets/
   inflating: ./main.py
 Running submission with Python
+INFO:root:loading parameters
+INFO:root:reading submission format from /codeexecution/data/submission_format.csv ...
+INFO:root:read dataframe with 10,008 rows
+INFO:root:reading raw incident data from /codeexecution/data/incidents.csv ...
+INFO:root:read dataframe with 1,455,608 rows
+INFO:root:counting up incidents by (neighborhood, year, month)
+INFO:root:privatizing each set of 10008 counts...
+100%|██████████| 10008/10008 [00:02<00:00, 3555.32it/s]
+INFO:root:writing 10,008 rows out to /codeexecution/submission.csv
 Exporting submission.csv result...
 Script completed its run.
+DeprecationWarning: 'source deactivate' is deprecated. Use 'conda deactivate'.
+============================= test session starts ==============================
+platform linux -- Python 3.8.5, pytest-6.0.2, py-1.9.0, pluggy-0.13.1
+rootdir: /codeexecution
+collected 6 items
+
+tests/test_submission.py ......                                          [100%]
+
+============================== 6 passed in 0.38s ===============================
+INFO:root:reading incidents from /codeexecution/data/incidents.csv ...
+/opt/conda/envs/py-cpu/lib/python3.8/site-packages/numpy/lib/arraysetops.py:580: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  mask |= (ar1 == a)
+INFO:root:reading submission from /codeexecution/submission.csv ...
+INFO:root:read dataframe with 10,008 rows
+INFO:root:computing ground truth ...
+INFO:root:read dataframe with 10,008 rows
+INFO:root:OVERALL SCORE: 13.886839292705211
 ================ END ================
 ```
 
 Running `make` at the terminal will tell you all the commands available in the repository:
 
 ```
-TODO: replace
+➜ make
+
 Settings based on your machine:
-CPU_OR_GPU=cpu 			# Whether or not to try to build, download, and run GPU versions
-SUBMISSION_IMAGE=925a59ad1b19 	# ID of the image that will be used when running test-submission
+CPU_OR_GPU=cpu                  # Whether or not to try to build, download, and run GPU versions
+SUBMISSION_IMAGE=b09bce29f1c9   # ID of the image that will be used when running test-submission
 
 Available competition images:
-drivendata/sfp-competition:cpu-local (925a59ad1b19); drivendata/sfp-competition:cpu-latest (09768914d125);
+drivendata/deid2-competition:gpu-local (a9ef4bf9be1c); drivendata/deid2-competition:cpu-local (b09bce29f1c9);
 
 Available commands:
 
 build               Builds the container locally, tagging it with cpu-local or gpu-local
+data/incidents.csv  Download the incidents dataset
 debug-container     Start your locally built container and open a bash shell within the running container; same as submission setup except has network access
+export-requirements Export the conda environment YAML from the container
 pack-benchmark      Creates a submission/submission.zip file from whatever is in the "benchmark" folder
 pull                Pulls the official container tagged cpu-latest or gpu-latest from Docker hub
-sample-data         Download TODO
+resolve-python-requirements Resolve the Python dependencies inside the container and write out to the host environment YAML file
+resolve-r-requirements Resolve the R dependencies inside the container and write out to the host environment YAML file
 test-container      Ensures that your locally built container can import all the Python packages successfully when it runs
 test-submission     Runs container with submission/submission.zip as your submission and data as the data to work with
+unpin-requirements  Remove specific version pins from Python conda environment YAML
 ```
 
 To find out more about what these commands do, keep reading! :eyes:
@@ -110,26 +147,19 @@ The [submission format page](https://www.drivendata.org/competitions/TODO) conta
 
 ### How your submission will run
 
-Your submission will run inside a virtual operating system within the container that Docker runs on your machine (your computer is the "host" for the container). Within that virtual operating system, `/codeexecution/data` will point to whatever is in your host machine's `data` folder. `/codeexecution/submission` will point to whatever is in your host machine's `submission` folder.
+Your submission will run inside a virtual operating system within the container that Docker runs on your machine (your computer is the "host" for the container). The virtual operating system is isolated from your host machine, with the exception of the contents of the following two directories:
+ - the `data` directory is mounted in your locally running container as a read-only directory `/codeexecution/data`
+ - the `submission` directory is mounted in your locally running container as `/codeexecution/submission`
 
-The script to execute the submission will unzip the contents of `/codeexecution/submission/submssion.zip` into the `/codeexecution` folder. This should create a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`.
+When you make a submission, the code execution platform will unzip the contents of `/codeexecution/submission/submssion.zip` into the `/codeexecution` folder. This should result in a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`. Your code should read the `incidents.csv` and `parameters.json` from `/codeexecution/data` and save the output to `/codeexecution/submission.csv`.
 
-Your code should read the `submission_format.csv` and `TODO.csv` files from `/codeexecution/data`. On the DrivenData platform, `/codeexecution/data` will have the actual test images, and the matching `submission_format.csv` and `TODO.csv`.
-
-As mentioned, when you execute the container locally, we will mount two subfolders in this repository into the containter:
-
-- the `data` directory is mounted in your locally running container as a read-only directory `/codeexecution/data`
-- the `submission` directory is mounted in your locally running container as `/codeexecution/submission`
-
-Your `submission.zip` file must exist in the `submission` folder on your host machine in order to be processed when you are testing execution locally.
-
-Use `make pack-benchmark` to create your submission. It takes a `LANGUAGE` argument that can be either `py` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the example submission and put it into the submission folder, run:
+Use `make pack-benchmark` to create a benchmark submission. It takes a `LANGUAGE` argument that can be either `py` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the benchmark Python submission, run:
 
 ```bash
 make pack-benchmark LANGUAGE=py
 ```
 
-When you run this in the future, you should check and remove any existing `submission/submission.zip` file. The `make pack-benchmark` command does not overwrite this file (so we won't accidentally lose your work).
+To avoid losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
 
 ### Test running your submission locally
 
@@ -143,13 +173,13 @@ make pull
 
 ### Making a submission
 
-Once you have the container image downloaded locally, you will be able to run it to see if your code works. You can put your `submission.zip` file in the `submission` folder and run the following command (or just use the sample one that was created when you ran `make pack-benchmark` above):
+Once you have the container image downloaded locally, you will be able to run it to see if your code works. First, save your submission archive to `submission/submission.zip` (or generate the sample submission with `make pack-benchmark`), then test it locally by running:
 
 ```bash
 make test-submission
 ```
 
-This will spin up the container, mount the local folders as drives within the folder, and follow the same steps that will run on the platform to unpack your submission and run your code  against what it finds in the `/codeexecution/data` folder.
+This will spin up the container, mount the local folders as to folders within the container, and follow the same steps that will run on the platform to unpack your submission and run your code against what it finds in the `/codeexecution/data` folder.
 
 ### Reviewing the logs
 
@@ -172,11 +202,17 @@ We use [conda](https://docs.conda.io/en/latest/) to manage Python dependencies. 
 
 Your new dependency should follow the format in the yml and be pinned to a particular version of the package and build with conda.
 
+### Adding new R packages
+
+We prefer to use conda to manage R dependencies. Take a look at what packages are available from [Anaconda's `pkgs/r`](https://repo.anaconda.com/pkgs/r/) and from [`conda-forge`](https://conda-forge.org/feedstocks/). Note that R packages in conda typically start with the prefix `r-`. Add your new dependencies to both `runtime/r-cpu.yml` and `runtime/r-gpu.yml`.
+
+If your dependencies are not available from the Anaconda or `conda-forge`, you can also add installation code to both the install scripts `runtime/package-installs-cpu.R` and `runtime/package-installs-gpu.R` to install from CRAN or GitHub.
+
+Please also add your dependencies to `runtime/tests/test-installs.R`, below the line `## ADD ADDITIONAL REQUIREMENTS BELOW HERE ##`.
+
 ### Testing new dependencies
 
-Please test your new dependency locally by recreating the relevant conda environment using the appropriate CPU or GPU `.yml` file. Try activating that environment and loading your new dependency.
-
-Once that works, you'll want to make sure it works within the container as well. To do so, you can run:
+Test your new dependency locally by recreating the relevant conda environment using the appropriate CPU or GPU `.yml` file. Try activating that environment and loading your new dependency. Once that works, you'll want to make sure it works within the container as well. To do so, you can run:
 
 ```
 make test-container
@@ -184,9 +220,9 @@ make test-container
 
 Note: this will run `make build` to create the new container image with your changes automatically, but you could also do it manually.
 
-This will build a local version of the official container and then run the import tests to make sure the relevant libraries can all be successfully loaded. This must pass before you submit a pull request to our repo to update the requirements. If it does not, you'll want to figure out what else you need to make the dependencies happy.
+This will build a local version of the container and then run the import tests to make sure the relevant libraries can all be successfully loaded. This must pass before you submit a pull request to this repository to update the requirements. If it does not, you'll want to figure out what else you need to make the dependencies happy.
 
-If you have problems, the following command will run a bash shell in the container to let you interact with it. Make sure to activate the `conda` environment (e.g., `conda activate py-cpu`) when you start the container if you want to test the dependencies!
+If you have problems, the following command will run a bash shell in the container to let you interact with it. Make sure to activate the `conda` environment (e.g., `source activate py-cpu`) when you start the container if you want to test the dependencies!
 
 ```
 make debug-container

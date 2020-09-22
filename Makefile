@@ -1,4 +1,5 @@
-.PHONY: build pull test-container debug-container unpin-requirements export-requirements resolve-python-requirements resolve-r-requirements test-submission sample-images pack-benchmark
+.PHONY: build debug-container export-requirements pack-benchmark pull resolve-python-requirements resolve-r-requirements test-container test-submission unpin-requirements
+
 
 # ================================================================================================
 # Settings
