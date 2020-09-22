@@ -81,10 +81,10 @@ export-requirements:
 		/bin/bash -c "conda env export -n ${LANGUAGE}-${CPU_OR_GPU}" \
 		> runtime/${LANGUAGE}-${CPU_OR_GPU}.yml
 
-## Resolve the Python dependencies inside the container and write out to the host environment YAML file
+## Resolve the Python dependencies inside the container and write an environment YAML file on the host machine
 resolve-python-requirements: build export-python-requirements
 
-## Resolve the R dependencies inside the container and write out to the host environment YAML file
+## Resolve the R dependencies inside the container and write an environment YAML file on the host machine
 resolve-r-requirements: build export-r-requirements
 
 
@@ -95,10 +95,6 @@ resolve-r-requirements: build export-r-requirements
 ## Pulls the official container tagged cpu-latest or gpu-latest from Docker hub
 pull:
 	docker pull ${IMAGE}
-
-## Download the incidents dataset
-data/incidents.csv:
-	echo "Download the incidents.csv"
 
 ## Creates a submission/submission.zip file from whatever is in the "benchmark" folder
 pack-benchmark:

@@ -121,7 +121,6 @@ drivendata/deid2-competition:gpu-local (a9ef4bf9be1c); drivendata/deid2-competit
 Available commands:
 
 build               Builds the container locally, tagging it with cpu-local or gpu-local
-data/incidents.csv  Download the incidents dataset
 debug-container     Start your locally built container and open a bash shell within the running container; same as submission setup except has network access
 export-requirements Export the conda environment YAML from the container
 pack-benchmark      Creates a submission/submission.zip file from whatever is in the "benchmark" folder
