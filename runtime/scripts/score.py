@@ -1,14 +1,13 @@
 import json
-import logging
 from pathlib import Path
 
+from loguru import logger
 import pandas as pd
+import typer
 
 from metric import Deid2Metric
 from create_ground_truth import get_ground_truth
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 
 INDEX_COLS = ["epsilon", "neighborhood", "year", "month"]
 
@@ -60,4 +59,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
