@@ -102,7 +102,7 @@ pack-benchmark:
 ifneq (,$(wildcard ./submission/submission.zip))
 	$(error You already have a submission/submission.zip file. Rename or remove that file (e.g., rm submission/submission.zip).)
 endif
-	cd benchmark/${LANGUAGE}; zip -r ../../submission/submission.zip ./*
+	cd benchmark; zip -r ../submission/submission.zip ./*
 
 
 ## Runs container with submission/submission.zip as your submission and data as the data to work with

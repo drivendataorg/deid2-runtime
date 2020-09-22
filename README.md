@@ -45,7 +45,7 @@ Additional requirements to run with GPU:
 
 ### Quickstart
 
-To test out the full execution pipeline, run the following commands in order in the terminal. These will get the Docker images, zip up an example submission script, and submit that submission.zip to your locally running version of the container.
+To test out the full execution pipeline, run the following commands in order in the terminal. These will get the Docker images, zip up an example submission script, and run the submission on your locally running version of the container.
 
 ```
 make pull
@@ -134,51 +134,44 @@ unpin-requirements  Remove specific version pins from Python conda environment Y
 
 To find out more about what these commands do, keep reading! :eyes:
 
-## (1) Testing your submission.zip
+## (1) Testing your submission locally
+
+Your submission will run inside a Docker container, a virtual operating system that allows for a consistent software environment across machines. This means that if your submission successfully runs in the container on your local machine, you can be pretty sure it will successfully run when you make an official submission to the DrivenData site.
+
+In Docker parlance, your computer is the "host" that runs the container. The container is isolated from your host machine, with the exception of the following directories:
+
+ - the `data` directory on the host machine is mounted in the container as a read-only directory `/codeexecution/data`
+ - the `submission` directory on the host machine is mounted in the container as `/codeexecution/submission`
+
+When you make a submission, the code execution platform will unzip your submission assets to the `/codeexecution` folder. This must result in either a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`. On the official code execution platform, we will take care of mounting the data―you can assume your submission will have access to `incidents.csv`, `parameters.json`, and `submission_format.csv` in `/codeexecution/data`. You are responsible for creating the submission script that will read from `/codeexecution/data` and write to `/codeexecution/submission.csv`. Keep in mind that your submission will not have access to the internet, so everything it needs to run must be provided in the `submission.zip` you create. (You _are_ permitted to write intermediate files to `/codeexecution/submission`.)
 
 ### Implement your solution
 
-In order to test your code submission, you will need a code submission! You will need to train your model separately before creating your `submission.zip` file that will run your code.
+In order to test your code submission, you will need a code submission! Implement your solution as either a Python script named `main.py`, an R script named `main.R`, or a binary executable named `main`. Next, create a `submission.zip` file containing your code and model assets.
 
 **NOTE: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
 
 The [submission format page](https://www.drivendata.org/competitions/TODO) contains the detailed information you need to prepare your submission.
 
-### How your submission will run
+### Example benchmark submission
 
-Your submission will run inside a virtual operating system within the container that Docker runs on your machine (your computer is the "host" for the container). The virtual operating system is isolated from your host machine, with the exception of the contents of the following two directories:
- - the `data` directory is mounted in your locally running container as a read-only directory `/codeexecution/data`
- - the `submission` directory is mounted in your locally running container as `/codeexecution/submission`
+We have created a benchmark in Python to serve as a concrete example of a submission. Use `make pack-benchmark` to create the benchmark submission from the source code. The command zips everything in the `benchmark` folder and saves the zip archive to `submission/submission.zip`. To prevent losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
 
-When you make a submission, the code execution platform will unzip the contents of `/codeexecution/submission/submssion.zip` into the `/codeexecution` folder. This should result in a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`. Your code should read the `incidents.csv` and `parameters.json` from `/codeexecution/data` and save the output to `/codeexecution/submission.csv`.
+### Making a submission
 
-Use `make pack-benchmark` to create a benchmark submission. It takes a `LANGUAGE` argument that can be either `py` or `R`. The command zips everything in the `benchmark/<LANGUAGE>` folder and saves the zip archive to `submission/submission.zip`. For example, to prepare the benchmark Python submission, run:
-
-```bash
-make pack-benchmark LANGUAGE=py
-```
-
-To avoid losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
-
-### Test running your submission locally
-
-You can execute the same containers locally that we will use on the DrivenData platform to ensure your code will run.
-
-Make sure you have the [prerequisites](#prerequisites) installed. Then, you can run the following command within the repository to download the official image:
+Make sure you have the [prerequisites](#prerequisites) installed. Then, run the following command to download the official image:
 
 ```bash
 make pull
 ```
 
-### Making a submission
-
-Once you have the container image downloaded locally, you will be able to run it to see if your code works. First, save your submission archive to `submission/submission.zip` (or generate the sample submission with `make pack-benchmark`), then test it locally by running:
+Now after you have packed up your solution in `submission/submission.zip` (or generated the sample submission with `make pack-benchmark`), you can test it locally by running:
 
 ```bash
 make test-submission
 ```
 
-This will spin up the container, mount the local folders as to folders within the container, and follow the same steps that will run on the platform to unpack your submission and run your code against what it finds in the `/codeexecution/data` folder.
+This will start the container, mount the local data and submission folders as folders within the container, and follow the same steps that will run on the platform to unpack your submission and run your code.
 
 ### Reviewing the logs
 
