@@ -14,16 +14,16 @@ This repository has two primary uses for competitors:
 ### [Getting started](#0-getting-started)
  - [Prerequisites](#prerequisites)
  - [Quickstart](#quickstart)
-### [Testing your submission.zip](#1-testing-your-submissionzip)
+### [Testing your submission locally](#1-testing-your-submission-locally)
  - [Implement your solution](#implement-your-solution)
- - [How your submission will run](#how-your-submission-will-run)
- - [Test running your submission locally](#test-running-your-submission-locally)
-   - [Making a submission](#making-a-submission)
-   - [Reviewing the logs](#reviewing-the-logs)
+ - [Example benchmark submission](#example-benchmark-submission)
+ - [Making a submission](#making-a-submission)
+ - [Reviewing the logs](#reviewing-the-logs)
 ### [Updating the runtime packages](#2-updating-the-runtime-packages)
- - [Adding new Python packages](#adding-dependencies-to-the-runtime)
+ - [Adding new Python packages](#adding-new-python-package)
+ - [Adding new R packages](#adding-new-r-packages)
  - [Testing new dependencies](#testing-new-dependencies)
- - [Submitting a PR](#opening-a-pull-request)
+ - [Opening a pull request](#opening-a-pull-request)
 
 ----
 
@@ -230,6 +230,6 @@ You may be asked to submit revisions to your pull request if the tests fail, or 
 
 ---
 
-## Happy modeling!
+## Good luck; have fun!
 
 Thanks for reading! Enjoy the competition, and [hit up the forums](https://community.drivendata.org/) if you have any questions!
