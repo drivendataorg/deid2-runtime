@@ -1,4 +1,4 @@
-.PHONY: build debug-container export-requirements pack-benchmark pull resolve-python-requirements resolve-r-requirements test-container test-submission unpin-requirements
+.PHONY: build debug-container export-requirements pack-benchmark pull resolve-requirements test-container test-submission unpin-requirements
 
 
 # ================================================================================================
@@ -81,11 +81,8 @@ export-requirements:
 		/bin/bash -c "conda env export -n ${LANGUAGE}-${CPU_OR_GPU}" \
 		> runtime/${LANGUAGE}-${CPU_OR_GPU}.yml
 
-## Resolve the Python dependencies inside the container and write an environment YAML file on the host machine
-resolve-python-requirements: build export-python-requirements
-
-## Resolve the R dependencies inside the container and write an environment YAML file on the host machine
-resolve-r-requirements: build export-r-requirements
+## Resolve the dependencies inside the container and write an environment YAML file on the host machine
+resolve-requirements: build export-requirements
 
 
 # ================================================================================================
