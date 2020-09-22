@@ -6,7 +6,7 @@ exit_code=0
 {
     cd /codeexecution
 
-    # check for gpu with nvidia-smi
+    # Check for gpu with nvidia-smi
     if [ $(which nvidia-smi) ]
     then
         :
@@ -25,11 +25,14 @@ exit_code=0
         python main.py
     elif [ -f "main.R" ]
     then
-        source activate r-$processor
-        echo "Running submission with R"
-        R -f main.R
+	source activate r-$processor
+	echo "Running submission with R"
+    elif [ -f "main" ]
+    then
+	echo "Running submission binary"
+	main
     else
-        echo "ERROR: Could not find main.py or main.R in submission.zip"
+        echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
     fi
 
@@ -44,6 +47,15 @@ exit_code=0
         echo "ERROR: Script did not produce a submission.csv file in the main directory."
         exit_code=1
     fi
+
+    deactivate
+    conda activate py-$processor
+
+    # Test that submission is valid
+    pytest
+
+    # Score the submission
+    python score.py
 
     echo "================ END ================"
 } |& tee "/codeexecution/submission/log.txt"

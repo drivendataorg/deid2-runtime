@@ -1,10 +1,21 @@
+import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
-from loguru import logger
 import numpy as np
 import pandas as pd
-import typer
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
+ROOT_DIRECTORY = Path("/codeexecution")
+DATA_DIRECTORY = ROOT_DIRECTORY / "data"
+
+DEFAULT_SUBMISSION_FORMAT = DATA_DIRECTORY / "submission_format.csv"
+DEFAULT_INCIDENTS = DATA_DIRECTORY / "incidents.csv"
+DEFAULT_OUTPUT = ROOT_DIRECTORY / "ground_truth.csv"
 
 
 def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
@@ -38,7 +49,9 @@ def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
 
 
 def main(
-    incident_csv: Path, submission_format_csv: Path, output_file: Path = None,
+    incident_csv: Path = DEFAULT_INCIDENTS,
+    submission_format_csv: Path = DEFAULT_SUBMISSION_FORMAT,
+    output_file: Optional[Path] = DEFAULT_OUTPUT,
 ):
     logger.info(f"reading submission format from {submission_format_csv} ...")
     submission_format = pd.read_csv(
@@ -58,4 +71,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()

@@ -1,36 +1,50 @@
 import json
+import logging
 from pathlib import Path
 
-from loguru import logger
 import pandas as pd
-import pytest
-import typer
 
-import metric
+from metric import Deid2Metric
+from create_ground_truth import get_ground_truth
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 INDEX_COLS = ["epsilon", "neighborhood", "year", "month"]
 
+ROOT_DIRECTORY = Path("/codeexecution")
+DATA_DIRECTORY = ROOT_DIRECTORY / "data"
+
+DEFAULT_INCIDENTS = DATA_DIRECTORY / "incidents.csv"
+DEFAULT_GROUND_TRUTH = DATA_DIRECTORY / "ground_truth.csv"
+DEFAULT_SUBMISSION = ROOT_DIRECTORY / "submission.csv"
+
 
 def main(
-    submission: Path, ground_truth: Path, json_report: bool = False,
+    incidents_path: Path = DEFAULT_INCIDENTS,
+    submission_path: Path = DEFAULT_SUBMISSION,
+    json_report: bool = False,
 ):
-    logger.info(f"reading submission from {submission} ...")
-    submission_format = pd.read_csv(submission, index_col=INDEX_COLS)
-    logger.info(f"read dataframe with {len(submission_format):,} rows")
+    logger.info(f"reading incidents from {incidents_path} ...")
+    incidents = pd.read_csv(incidents_path, index_col=0)
 
-    logger.info(f"reading ground truth from {ground_truth} ...")
-    ground_truth = pd.read_csv(ground_truth, index_col=INDEX_COLS)
+    logger.info(f"reading submission from {submission_path} ...")
+    submission = pd.read_csv(submission_path, index_col=INDEX_COLS)
+    logger.info(f"read dataframe with {len(submission):,} rows")
+
+    logger.info("computing ground truth ...")
+    ground_truth = get_ground_truth(incidents, submission)
     logger.info(f"read dataframe with {len(ground_truth):,} rows")
 
-    scorer = metric.Deid2Metric()
+    scorer = Deid2Metric()
     overall_score, row_scores = scorer.score(
-        ground_truth.values, submission_format.values, return_individual_scores=True
+        ground_truth.values, submission.values, return_individual_scores=True
     )
-    logger.success(f"OVERALL SCORE: {overall_score}")
+    logger.info(f"OVERALL SCORE: {overall_score}")
 
     if json_report:
         row_outcomes = []
-        for idx, score in zip(submission_format.index, row_scores):
+        for idx, score in zip(submission.index, row_scores):
             epsilon, neighborhood, year, month = idx
             row_outcomes.append(
                 {
@@ -42,8 +56,8 @@ def main(
                 }
             )
         result = {"score": overall_score, "details": row_outcomes}
-        typer.echo(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()
