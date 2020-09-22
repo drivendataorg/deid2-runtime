@@ -22,7 +22,9 @@ def get_submission_format(params: dict):
         for neighborhood in neighborhood_codes:
             for year, month in periods:
                 indices.append((epsilon, neighborhood, year, month))
-    index = pd.MultiIndex.from_tuples(indices, names=["epsilon", "neighborhood", "year", "month"])
+    index = pd.MultiIndex.from_tuples(
+        indices, names=["epsilon", "neighborhood", "year", "month"]
+    )
     df = pd.DataFrame(index=index, columns=incident_codes).fillna(0)
     return df
 
