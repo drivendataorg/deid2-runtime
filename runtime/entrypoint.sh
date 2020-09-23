@@ -30,7 +30,7 @@ exit_code=0
     elif [ -f "main" ]
     then
 	echo "Running submission binary"
-	main
+	./main
     else
         echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
