@@ -20,13 +20,12 @@ exit_code=0
 
     if [ -f "main.py" ]
     then
-        source activate py-$processor
         echo "Running submission with Python"
-        python main.py
+	conda run -n py-$processor python main.py
     elif [ -f "main.R" ]
     then
-	source activate r-$processor
 	echo "Running submission with R"
+	conda run -n r-$processor R main.R
     elif [ -f "main" ]
     then
 	echo "Running submission binary"
@@ -48,14 +47,11 @@ exit_code=0
         exit_code=1
     fi
 
-    deactivate
-    source activate py-$processor
-
     # Test that submission is valid
-    pytest
+    conda run -n py-$processor pytest
 
     # Score the submission
-    python score.py
+    conda run -n py-$processor python score.py
 
     echo "================ END ================"
 } |& tee "/codeexecution/submission/log.txt"
