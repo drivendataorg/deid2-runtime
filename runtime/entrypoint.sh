@@ -21,15 +21,15 @@ exit_code=0
     if [ -f "main.py" ]
     then
         echo "Running submission with Python"
-	conda run -n py-$processor python main.py
+        conda run -n py-$processor python main.py
     elif [ -f "main.R" ]
     then
-	echo "Running submission with R"
-	conda run -n r-$processor R main.R
+        echo "Running submission with R"
+        conda run -n r-$processor R main.R
     elif [ -f "main" ]
     then
-	echo "Running submission binary"
-	./main
+        echo "Running submission binary"
+        ./main
     else
         echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
