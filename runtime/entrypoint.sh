@@ -49,7 +49,7 @@ exit_code=0
     fi
 
     deactivate
-    conda activate py-$processor
+    source activate py-$processor
 
     # Test that submission is valid
     pytest
