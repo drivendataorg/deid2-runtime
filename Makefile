@@ -27,7 +27,7 @@ ifneq (true, ${GITHUB_ACTIONS_NO_TTY})
 TTY_ARGS = -it
 endif
 
-# To run a submission, wse local version if that exists; otherwise, use official version
+# To run a submission, use local version if that exists; otherwise, use official version
 # setting SUBMISSION_IMAGE as an environment variable will override the image
 SUBMISSION_IMAGE ?= $(shell docker images -q ${LOCAL_IMAGE})
 ifeq (,${SUBMISSION_IMAGE})
