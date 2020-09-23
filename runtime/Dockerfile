@@ -24,36 +24,34 @@ RUN apt-get update --fix-missing && \
 RUN groupadd -g 999 appuser && \
     useradd -r -u 1000 -g appuser appuser
 
-RUN mkdir /envs /home/appuser /codeexecution && \
-    chown -R appuser /opt /envs /home/appuser /codeexecution
+RUN mkdir /codeexecution /envs /home/appuser && \
+    chown -R appuser /codeexecution /envs /home/appuser /opt
 
-# install miniconda as system python
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O /opt/miniconda.sh && \
-	/bin/bash /opt/miniconda.sh -b -p /opt/conda
+USER 1000
 
-ENV PATH /opt/conda/bin:$PATH
+# Install Miniconda as system Python
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p ~/miniconda
+
+ENV PATH ~/miniconda/bin:$PATH
 
 # Create Python environment
 COPY ./py-${CPU_OR_GPU}.yml /envs/
-RUN conda update conda -y && \
-    conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
-    conda clean -a -y
+RUN ~/miniconda/bin/conda update conda -y && \
+    ~/miniconda/bin/conda env create -f /envs/py-${CPU_OR_GPU}.yml && \
+    ~/miniconda/bin/conda clean -a -y
 
 # Create R environment
 COPY ./r-${CPU_OR_GPU}.yml ./package-installs-${CPU_OR_GPU}.R /envs/
-RUN conda update conda -y && \
-    conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
-    conda clean -a -y && \
-    conda clean -f -y && \
-    /opt/conda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
+RUN ~/miniconda/bin/conda update conda -y && \
+    ~/miniconda/bin/conda env create -f /envs/r-${CPU_OR_GPU}.yml && \
+    ~/miniconda/bin/conda clean -a -y && \
+    ~/miniconda/bin/conda clean -f -y && \
+    ~/miniconda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
 
-COPY ./entrypoint.sh /codeexecution/entrypoint.sh
-RUN chmod +x /codeexecution/entrypoint.sh
-
-COPY ./tests/test_submission.py /codeexecution/tests/test_submission.py
-COPY ./scripts/metric.py ./scripts/score.py ./scripts/create_ground_truth.py /codeexecution/
-
-USER 1000
+COPY --chown=appuser:appuser ./entrypoint.sh /codeexecution/entrypoint.sh
+COPY --chown=appuser:appuser ./scripts/metric.py ./scripts/score.py ./scripts/create_ground_truth.py /codeexecution/
+COPY --chown=appuser:appuser ./tests/test_submission.py /codeexecution/tests/test_submission.py
 
 # Execute the entrypoint.sh script inside the container when we do docker run
 CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]
