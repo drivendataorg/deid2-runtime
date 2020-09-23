@@ -14,16 +14,16 @@ This repository has two primary uses for competitors:
 ### [Getting started](#0-getting-started)
  - [Prerequisites](#prerequisites)
  - [Quickstart](#quickstart)
-### [Testing your submission.zip](#1-testing-your-submissionzip)
+### [Testing your submission locally](#1-testing-your-submission-locally)
  - [Implement your solution](#implement-your-solution)
- - [How your submission will run](#how-your-submission-will-run)
- - [Test running your submission locally](#test-running-your-submission-locally)
-   - [Making a submission](#making-a-submission)
-   - [Reviewing the logs](#reviewing-the-logs)
+ - [Example benchmark submission](#example-benchmark-submission)
+ - [Making a submission](#making-a-submission)
+ - [Reviewing the logs](#reviewing-the-logs)
 ### [Updating the runtime packages](#2-updating-the-runtime-packages)
- - [Adding new Python packages](#adding-dependencies-to-the-runtime)
+ - [Adding new Python packages](#adding-new-python-package)
+ - [Adding new R packages](#adding-new-r-packages)
  - [Testing new dependencies](#testing-new-dependencies)
- - [Submitting a PR](#opening-a-pull-request)
+ - [Opening a pull request](#opening-a-pull-request)
 
 ----
 
@@ -151,11 +151,11 @@ In order to test your code submission, you will need a code submission! Implemen
 
 **NOTE: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
 
-The [submission format page](https://www.drivendata.org/competitions/TODO) contains the detailed information you need to prepare your submission.
+The [submission format page](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1/page/260/#submissions) contains the detailed information you need to prepare your submission.
 
 ### Example benchmark submission
 
-We have created a benchmark in Python to serve as a concrete example of a submission. Use `make pack-benchmark` to create the benchmark submission from the source code. The command zips everything in the `benchmark` folder and saves the zip archive to `submission/submission.zip`. To prevent losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
+We wrote a benchmark in Python to serve as a concrete example of a submission. Use `make pack-benchmark` to create the benchmark submission from the source code. The command zips everything in the `benchmark` folder and saves the zip archive to `submission/submission.zip`. To prevent losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
 
 ### Making a submission
 
@@ -230,6 +230,6 @@ You may be asked to submit revisions to your pull request if the tests fail, or 
 
 ---
 
-## Happy modeling!
+## Good luck; have fun!
 
 Thanks for reading! Enjoy the competition, and [hit up the forums](https://community.drivendata.org/) if you have any questions!
