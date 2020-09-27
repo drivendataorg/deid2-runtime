@@ -8,7 +8,6 @@ class Deid2Metric:
         self.misleading_presence_penalty = 0.2
         self.bias_penalty = 0.25
         self.allowable_raw_bias = 500
-        self.epsilon = 1e-9
 
     @staticmethod
     def _normalize(arr):
@@ -21,7 +20,7 @@ class Deid2Metric:
         """ Take any entries that are below the threshold we care about and zero them out """
         return np.where(self._normalize(arr) >= self.threshold, arr, 0)
 
-    def _score_counts(self, actual, predicted):
+    def _penalty_components(self, actual, predicted):
         """ Score one row of counts for a particular (neighborhood, year, month) """
         if (actual == predicted).all():
             return 0.0, 0.0, 0.0
@@ -32,7 +31,7 @@ class Deid2Metric:
 
         # get the base Jensen Shannon distance from the normalized values plus a tiny
         # value to avoid divide-by-zero errors
-        jsd = jensenshannon(self._normalize(gt + 1e-9), self._normalize(dp + 1e-9))
+        jsd = jensenshannon(actual, predicted)
 
         # get the overall penalty for hallucinating counts
         misleading_presence_mask = (gt == 0) & (dp > 0)
@@ -49,7 +48,9 @@ class Deid2Metric:
         n_perms, _ = actual.shape
         scores = np.zeros(n_perms, dtype=np.float)
         for i in range(n_perms):
-            scores[i] = 1 - np.sum(self._score_counts(actual[i, :], predicted[i, :]))
+            scores[i] = 1 - np.sum(
+                self._penalty_components(actual[i, :], predicted[i, :])
+            )
         return scores
 
     def score(self, actual, predicted, return_individual_scores=False):
