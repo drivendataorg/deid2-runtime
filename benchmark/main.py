@@ -41,7 +41,6 @@ def naively_add_laplace_noise(arr, scale: float, seed: int = None):
 
 
 def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
-    """ Copied from `create_ground_truth.py` for easy reference """
     # get actual counts
     logger.debug("... creating pivot table")
     counts = incidents.assign(n=1).pivot_table(
@@ -51,14 +50,14 @@ def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
         aggfunc=np.sum,
         fill_value=0,
     )
-    counts.columns = counts.columns.astype(submission_format.columns.dtype)
     # when you pivot, you only gets rows and columns for things that were actually there --
     # the ground truth may not have all of the neighborhoods, periods, or codes we expected to see,
     # so we'll fix that by reindexing and then filling the missing values
     epsilons = submission_format.index.levels[0]
     index_for_one_epsilon = submission_format.loc[epsilons[0]].index
+    columns = submission_format.columns.astype(counts.columns)
     counts = (
-        counts.reindex(columns=submission_format.columns, index=index_for_one_epsilon)
+        counts.reindex(columns=columns, index=index_for_one_epsilon)
         .fillna(0)
         .astype(np.int32)
     )
@@ -68,6 +67,7 @@ def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
     ground_truth = submission_format.copy()
     for epsilon in epsilons:
         ground_truth.loc[epsilon] = counts.values
+        logger.info(f"added {counts.values.sum()} for epsilon {epsilon}")
     return ground_truth
 
 
@@ -89,6 +89,7 @@ def main(
         run["epsilon"]: run["max_records_per_individual"] / run["epsilon"]
         for run in params["runs"]
     }
+    logger.info(f"scales: {scales}")
 
     # read in the submission format
     logger.info(f"reading submission format from {submission_format} ...")
