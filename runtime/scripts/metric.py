@@ -29,9 +29,10 @@ class Deid2Metric:
         gt = self._zero_below_threshold(actual).ravel()
         dp = self._zero_below_threshold(predicted).ravel()
 
-        # get the base Jensen Shannon distance from the normalized values plus a tiny
-        # value to avoid divide-by-zero errors
-        jsd = jensenshannon(actual, predicted)
+        # get the base Jensen Shannon distance; add a tiny bit of weight to each bin in order
+        # to avoid all-zero arrays (and thus NaNs) without unduly influencing the distribution
+        # induced by normalizing the arrays (dividing by sums)
+        jsd = jensenshannon(actual + 1e-9, predicted + 1e-9)
 
         # get the overall penalty for hallucinating counts
         misleading_presence_mask = (gt == 0) & (dp > 0)
@@ -44,14 +45,14 @@ class Deid2Metric:
         bias_penalty = self.bias_penalty if bias_mask.any() else 0
         return jsd, misleading_presence_penalty, bias_penalty
 
-    def _score_all(self, actual, predicted):
-        n_perms, _ = actual.shape
-        scores = np.zeros(n_perms, dtype=np.float)
-        for i in range(n_perms):
-            scores[i] = 1 - np.sum(
-                self._penalty_components(actual[i, :], predicted[i, :])
-            )
-        return scores
+    def _raw_row_scores(self, actual, predicted):
+        n_rows, _n_incidents = actual.shape
+        raw_penalties = np.zeros(n_rows, dtype=np.float)
+        for i in range(n_rows):
+            components_i = self._penalty_components(actual[i, :], predicted[i, :])
+            raw_penalties[i] = np.sum(components_i)
+        raw_scores = np.ones_like(raw_penalties) - raw_penalties
+        return raw_scores
 
     def score(self, actual, predicted, return_individual_scores=False):
         # make sure the submitted values are proper
@@ -59,7 +60,7 @@ class Deid2Metric:
         assert (predicted >= 0).all()
 
         # get all of the individual scores
-        raw_scores = self._score_all(actual, predicted)
+        raw_scores = self._raw_row_scores(actual, predicted)
 
         # clip all the scores to [0, 1]
         scores = np.clip(raw_scores, a_min=0.0, a_max=1.0)
