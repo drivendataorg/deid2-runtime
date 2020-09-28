@@ -28,8 +28,15 @@ exit_code=0
         conda run -n r-$processor R main.R
     elif [ -f "main" ]
     then
-        echo "Running submission binary"
-        ./main
+	if [ $(stat -c %A main | cut -c4) = "x" ]
+	then
+            echo "Running submission binary"
+            ./main
+	else
+	    echo -e "ERROR: main is not executable. Please run:\n\n\tchmod u+x main\n\nbefore creating your submission."
+	    exit_code==1
+	fi
+
     else
         echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
