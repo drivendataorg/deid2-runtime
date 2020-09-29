@@ -58,7 +58,7 @@ exit_code=0
     conda run -n py-$processor pytest
 
     # Score the submission
-    conda run -n py-$processor python score.py
+    conda run -n py-$processor python scripts/score.py
 
     echo "================ END ================"
 } |& tee "/codeexecution/submission/log.txt"

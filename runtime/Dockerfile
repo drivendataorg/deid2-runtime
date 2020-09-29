@@ -49,9 +49,9 @@ RUN ~/miniconda/bin/conda update conda -y && \
     ~/miniconda/bin/conda clean -f -y && \
     ~/miniconda/envs/r-${CPU_OR_GPU}/bin/R -f /envs/package-installs-${CPU_OR_GPU}.R
 
-COPY --chown=appuser:appuser ./entrypoint.sh /codeexecution/entrypoint.sh
-COPY --chown=appuser:appuser ./scripts/metric.py ./scripts/score.py ./scripts/create_ground_truth.py /codeexecution/
-COPY --chown=appuser:appuser ./tests/test_submission.py /codeexecution/tests/test_submission.py
+COPY --chown=appuser:appuser entrypoint.sh /codeexecution/entrypoint.sh
+COPY --chown=appuser:appuser scripts/metric.py scripts/score.py /codeexecution/scripts/
+COPY --chown=appuser:appuser tests/test_submission.py /codeexecution/tests/test_submission.py
 
 # Execute the entrypoint.sh script inside the container when we do docker run
 CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]
