@@ -57,8 +57,9 @@ You should see output like this in the end (and find the same logs in the folder
 
 ```
 ➜ make pack-benchmark
-cd benchmark/py; zip -r ../../submission/submission.zip ./*
-  adding: main.py (deflated 63%)
+cd benchmark; zip -r ../submission/submission.zip ./*
+  adding: main (stored 0%)
+  adding: main.py (deflated 62%)
 
 ➜ make test-submission
 chmod -R 0777 submission/
@@ -69,40 +70,61 @@ docker run \
         --mount type=bind,source=/home/robert/projects/deid2-runtime/data,target=/codeexecution/data,readonly \
         --mount type=bind,source=/home/robert/projects/deid2-runtime/submission,target=/codeexecution/submission \
         --shm-size 8g \
-        b09bce29f1c9
+        46e21f0dad94
 GPU unavailable; falling back to CPU.
 Unpacking submission...
 Archive:  ./submission/submission.zip
+ extracting: ./main
   inflating: ./main.py
 Running submission with Python
-INFO:root:loading parameters
-INFO:root:reading submission format from /codeexecution/data/submission_format.csv ...
-INFO:root:read dataframe with 10,008 rows
-INFO:root:reading raw incident data from /codeexecution/data/incidents.csv ...
-INFO:root:read dataframe with 1,455,608 rows
-INFO:root:counting up incidents by (neighborhood, year, month)
-INFO:root:privatizing each set of 10008 counts...
-100%|██████████| 10008/10008 [00:02<00:00, 3555.32it/s]
-INFO:root:writing 10,008 rows out to /codeexecution/submission.csv
+2020-09-29 20:26:21.243 | DEBUG    | __main__:main:83 - setting random seed 42
+2020-09-29 20:26:21.243 | INFO     | __main__:main:86 - loading parameters
+2020-09-29 20:26:21.246 | INFO     | __main__:main:93 - laplace scales for each epsilon: {1.0: 20.0, 2.0: 10.0, 10.0: 2.0}
+2020-09-29 20:26:21.246 | INFO     | __main__:main:96 - reading submission format from /codeexecution/data/submission_format.csv ...
+2020-09-29 20:26:21.322 | INFO     | __main__:main:100 - read dataframe with 10,008 rows
+2020-09-29 20:26:21.322 | INFO     | __main__:main:103 - reading raw incident data from /codeexecution/data/incidents.csv ...
+2020-09-29 20:26:22.006 | INFO     | __main__:main:105 - read dataframe with 1,455,608 rows
+2020-09-29 20:26:22.006 | INFO     | __main__:main:107 - counting up incidents by (neighborhood, year, month)
+2020-09-29 20:26:22.006 | DEBUG    | __main__:get_ground_truth:43 - ... creating pivot table
+2020-09-29 20:26:22.376 | DEBUG    | __main__:get_ground_truth:62 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
+2020-09-29 20:26:22.381 | INFO     | __main__:main:111 - privatizing each set of 10,008 counts...
+100%|██████████| 10008/10008 [00:02<00:00, 3345.48it/s]
+2020-09-29 20:26:25.378 | INFO     | __main__:main:141 - writing 10,008 rows out to /codeexecution/submission.csv
+
 Exporting submission.csv result...
 Script completed its run.
-DeprecationWarning: 'source deactivate' is deprecated. Use 'conda deactivate'.
 ============================= test session starts ==============================
-platform linux -- Python 3.8.5, pytest-6.0.2, py-1.9.0, pluggy-0.13.1
+platform linux -- Python 3.8.5, pytest-6.0.2, py-1.9.0, pluggy-0.13.1 -- /home/appuser/miniconda/envs/py-cpu/bin/python
+cachedir: .pytest_cache
 rootdir: /codeexecution
-collected 6 items
+collecting ... collected 6 items
 
-tests/test_submission.py ......                                          [100%]
+tests/test_submission.py::test_shape_same PASSED                         [ 16%]
+tests/test_submission.py::test_index_matches PASSED                      [ 33%]
+tests/test_submission.py::test_columns_match PASSED                      [ 50%]
+tests/test_submission.py::test_data_types_match PASSED                   [ 66%]
+tests/test_submission.py::test_all_values_are_finite PASSED              [ 83%]
+tests/test_submission.py::test_all_values_are_nonzero PASSED             [100%]
 
-============================== 6 passed in 0.38s ===============================
-INFO:root:reading incidents from /codeexecution/data/incidents.csv ...
-/opt/conda/envs/py-cpu/lib/python3.8/site-packages/numpy/lib/arraysetops.py:580: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+=============================== warnings summary ===============================
+/home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/tensorflow/python/pywrap_tensorflow_internal.py:15
+  /home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/tensorflow/python/pywrap_tensorflow_internal.py:15: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+    import imp
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+========================= 6 passed, 1 warning in 2.15s =========================
+
+2020-09-29 20:26:29.229 | INFO     | __main__:main:64 - reading incidents from /codeexecution/data/incidents.csv ...
+/home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/numpy/lib/arraysetops.py:580: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
   mask |= (ar1 == a)
-INFO:root:reading submission from /codeexecution/submission.csv ...
-INFO:root:read dataframe with 10,008 rows
-INFO:root:computing ground truth ...
-INFO:root:read dataframe with 10,008 rows
-INFO:root:OVERALL SCORE: 13.886839292705211
+2020-09-29 20:26:29.774 | INFO     | __main__:main:67 - reading submission from /codeexecution/submission.csv ...
+2020-09-29 20:26:29.857 | INFO     | __main__:main:69 - read dataframe with 10,008 rows
+2020-09-29 20:26:29.857 | INFO     | __main__:main:71 - computing ground truth ...
+2020-09-29 20:26:29.857 | DEBUG    | __main__:get_ground_truth:23 - ... creating pivot table
+2020-09-29 20:26:30.233 | DEBUG    | __main__:get_ground_truth:42 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
+2020-09-29 20:26:30.238 | INFO     | __main__:main:73 - read dataframe with 10,008 rows
+2020-09-29 20:26:31.262 | INFO     | __main__:main:79 - OVERALL SCORE: 2895.666472006716
+
 ================ END ================
 ```
 
@@ -112,11 +134,11 @@ Running `make` at the terminal will tell you all the commands available in the r
 ➜ make
 
 Settings based on your machine:
-CPU_OR_GPU=cpu                  # Whether or not to try to build, download, and run GPU versions
-SUBMISSION_IMAGE=b09bce29f1c9   # ID of the image that will be used when running test-submission
+CPU_OR_GPU=gpu                  # Whether or not to try to build, download, and run GPU versions
+SUBMISSION_IMAGE=       # ID of the image that will be used when running test-submission
 
 Available competition images:
-drivendata/deid2-competition:gpu-local (a9ef4bf9be1c); drivendata/deid2-competition:cpu-local (b09bce29f1c9);
+drivendata/deid2-competition:cpu-local (46e21f0dad94); drivendata/deid2-competition:cpu-latest (7efffc575b06);
 
 Available commands:
 
@@ -125,8 +147,7 @@ debug-container     Start your locally built container and open a bash shell wit
 export-requirements Export the conda environment YAML from the container
 pack-benchmark      Creates a submission/submission.zip file from whatever is in the "benchmark" folder
 pull                Pulls the official container tagged cpu-latest or gpu-latest from Docker hub
-resolve-python-requirements Resolve the Python dependencies inside the container and write out to the host environment YAML file
-resolve-r-requirements Resolve the R dependencies inside the container and write out to the host environment YAML file
+resolve-requirements Resolve the dependencies inside the container and write an environment YAML file on the host machine
 test-container      Ensures that your locally built container can import all the Python packages successfully when it runs
 test-submission     Runs container with submission/submission.zip as your submission and data as the data to work with
 unpin-requirements  Remove specific version pins from Python conda environment YAML
@@ -147,9 +168,9 @@ When you make a submission, the code execution platform will unzip your submissi
 
 ### Implement your solution
 
-In order to test your code submission, you will need a code submission! Implement your solution as either a Python script named `main.py`, an R script named `main.R`, or a binary executable named `main`. Next, create a `submission.zip` file containing your code and model assets.
+In order to test your code submission, you will need a code submission! Implement your solution as either a Python script named `main.py`, an R script named `main.R`, or a binary executable named `main`. **Note: executable submissions must also include the source code, which will be validated manually.** Next, create a `submission.zip` file containing your code and model assets.
 
-**NOTE: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
+**Note: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
 
 The [submission format page](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1/page/260/#submissions) contains the detailed information you need to prepare your submission.
 
@@ -157,15 +178,15 @@ The [submission format page](https://www.drivendata.org/competitions/68/competit
 
 We wrote a benchmark in Python to serve as a concrete example of a submission. Use `make pack-benchmark` to create the benchmark submission from the source code. The command zips everything in the `benchmark` folder and saves the zip archive to `submission/submission.zip`. To prevent losing your work, this command will not overwrite an existing submission. To generate a new submission, you will first need to remove the existing `submission/submission.zip`.
 
-### Making a submission
+### Running your submission
 
-Make sure you have the [prerequisites](#prerequisites) installed. Then, run the following command to download the official image:
+Now you can make sure your submission runs locally prior to submitting it to the platform. Make sure you have the [prerequisites](#prerequisites) installed. Then, run the following command to download the official image:
 
 ```bash
 make pull
 ```
 
-Now after you have packed up your solution in `submission/submission.zip` (or generated the sample submission with `make pack-benchmark`), you can test it locally by running:
+Again, make sure you have packed up your solution in `submission/submission.zip` (or generated the sample submission with `make pack-benchmark`), then try running it:
 
 ```bash
 make test-submission
