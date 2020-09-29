@@ -46,7 +46,6 @@ packages <- c(
     "reticulate",
     "keras",
     "tensorflow",
-    "magick",
     ## ADD ADDITIONAL REQUIREMENTS BELOW HERE ##
 
     ############################################

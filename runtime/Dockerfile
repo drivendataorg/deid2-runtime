@@ -51,7 +51,7 @@ RUN ~/miniconda/bin/conda update conda -y && \
 
 COPY --chown=appuser:appuser entrypoint.sh /codeexecution/entrypoint.sh
 COPY --chown=appuser:appuser scripts/metric.py scripts/score.py /codeexecution/scripts/
-COPY --chown=appuser:appuser tests/test_submission.py /codeexecution/tests/test_submission.py
+COPY --chown=appuser:appuser tests /codeexecution/tests/
 
 # Execute the entrypoint.sh script inside the container when we do docker run
 CMD ["/bin/bash", "/codeexecution/entrypoint.sh"]

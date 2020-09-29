@@ -25,7 +25,7 @@ exit_code=0
     elif [ -f "main.R" ]
     then
         echo "Running submission with R"
-        conda run -n r-$processor R main.R
+        conda run -n r-$processor Rscript main.R
     elif [ -f "main" ]
     then
 	if [ $(stat -c %A main | cut -c4) = "x" ]
@@ -55,7 +55,7 @@ exit_code=0
     fi
 
     # Test that submission is valid
-    conda run -n py-$processor pytest
+    conda run -n py-$processor pytest -v
 
     # Score the submission
     conda run -n py-$processor python scripts/score.py
