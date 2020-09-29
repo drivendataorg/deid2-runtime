@@ -9,14 +9,21 @@ import typer
 JINJA_TEMPLATE_URL = "https://drivendata-competition-deid2-public.s3.amazonaws.com/visualization/report.jinja2"
 
 
-def main(json_report: Path, parameters: Path, template_path: Path = None):
+def main(json_report: Path, params_file: Path, template_path: Path = None):
+    """
+    Take the output of a `score.py` run and create an interactive HTML/JS visualization.
+    """
+    for expected_file in (json_report, params_file):
+        if not expected_file.exists():
+            raise typer.Exit(f"file not found: {expected_file}")
+
     logger.info(f"reading report from {json_report} ...")
     json_report = json.loads(json_report.read_text())
 
-    logger.info(f"reading parameters from {parameters} ...")
-    parameters = json.loads(parameters.read_text())
+    logger.info(f"reading parameters from {params_file} ...")
+    params_file = json.loads(params_file.read_text())
     # remove unnecessary clutter we don't use in the visualization
-    parameters["schema"].pop("incident_type")
+    params_file["schema"].pop("incident_type")
 
     if template_path is None:
         logger.info(f"downloading template from {JINJA_TEMPLATE_URL}...")
@@ -27,7 +34,7 @@ def main(json_report: Path, parameters: Path, template_path: Path = None):
     else:
         template_text = template_path.read_text()
 
-    context = {"report": json.dumps(json_report), "parameters": json.dumps(parameters)}
+    context = {"report": json.dumps(json_report), "parameters": json.dumps(params_file)}
 
     logger.info("rendering html...")
     env = jinja2.Environment()

@@ -1,3 +1,9 @@
+"""
+This file contains the implementation of the scoring metric so that you can use it locally
+or reimplement it in other languages. See the problem description for an explanation of
+the metric.
+"""
+
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 
@@ -31,8 +37,11 @@ class Deid2Metric:
 
         # get the base Jensen Shannon distance; add a tiny bit of weight to each bin in order
         # to avoid all-zero arrays (and thus NaNs) without unduly influencing the distribution
-        # induced by normalizing the arrays (dividing by sums)
-        jsd = jensenshannon(actual + 1e-9, predicted + 1e-9)
+        # induced by normalizing the arrays (dividing by sums); use base 2 to get a proper
+        # spread of scores between [0, 1] instead of default base e which is more like [0, 0.83]
+        #
+        # ref: https://docs.scipy.org/doc/scipy-1.5.2/reference/generated/scipy.spatial.distance.jensenshannon.html
+        jsd = jensenshannon(actual + 1e-9, predicted + 1e-9, base=2)
 
         # get the overall penalty for hallucinating counts
         misleading_presence_mask = (gt == 0) & (dp > 0)
@@ -65,8 +74,8 @@ class Deid2Metric:
         # clip all the scores to [0, 1]
         scores = np.clip(raw_scores, a_min=0.0, a_max=1.0)
 
-        # take the mean and multiply by 1000
-        overall_score = np.mean(scores) * 1000
+        # sum up the scores - a perfect score would be the length of the submission format
+        overall_score = np.sum(scores)
 
         # in some uses (like visualization), it's useful to get the individual scores out too
         if return_individual_scores:

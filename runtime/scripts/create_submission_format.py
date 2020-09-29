@@ -30,6 +30,14 @@ def get_submission_format(params: dict):
 
 
 def main(params_file: Path, output_file: Path = None):
+    """
+    Create a barebones submission file with all zeros for counts.
+
+    If `--output-file` is not provided then the script will print output to stdout.
+    """
+    if not params_file.exists():
+        raise typer.Exit(f"file not found: {params_file}")
+
     logger.info("loading parameters")
     params = json.loads(params_file.read_text())
 

@@ -1,20 +1,18 @@
 import json
-import logging
 import warnings
 from pathlib import Path
 from typing import Optional
 
+from loguru import logger
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import typer
 
 
 # current numpy and pandas versions have a FutureWarning for a mask operation we use;
 # we will ignore it
 warnings.filterwarnings("ignore", category=FutureWarning)
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 
 ROOT_DIRECTORY = Path("/codeexecution")
 RUNTIME_DIRECTORY = ROOT_DIRECTORY / "submission"
@@ -67,7 +65,6 @@ def get_ground_truth(incidents: pd.DataFrame, submission_format: pd.DataFrame):
     ground_truth = submission_format.copy()
     for epsilon in epsilons:
         ground_truth.loc[epsilon] = counts.values
-        logger.info(f"added {counts.values.sum()} for epsilon {epsilon}")
     return ground_truth
 
 
@@ -78,6 +75,10 @@ def main(
     params_file: Path = DEFAULT_PARAMS,
     random_seed: int = 42,
 ):
+    """
+    Generate an example submission. The defaults are set so that the script will run successfully
+    without being passed any arguments, invoked only as `python main.py`.
+    """
     # set a random seed to make this reproducible
     logger.debug(f"setting random seed {random_seed}")
     np.random.seed(random_seed)
@@ -89,7 +90,7 @@ def main(
         run["epsilon"]: run["max_records_per_individual"] / run["epsilon"]
         for run in params["runs"]
     }
-    logger.info(f"scales: {scales}")
+    logger.info(f"laplace scales for each epsilon: {scales}")
 
     # read in the submission format
     logger.info(f"reading submission format from {submission_format} ...")
@@ -107,7 +108,7 @@ def main(
     # get actual counts (BUT DO NOT "LOOK" AT THEM YET -- see ALL CAPS note below)
     ground_truth = get_ground_truth(incidents, submission_format)
 
-    logger.info(f"privatizing each set of {len(submission_format)} counts...")
+    logger.info(f"privatizing each set of {len(submission_format):,} counts...")
     submission = submission_format.copy()
     with tqdm(total=len(submission_format)) as pbar:
         # for each of the neighboorhood ...
@@ -144,4 +145,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
