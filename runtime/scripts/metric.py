@@ -41,7 +41,7 @@ class Deid2Metric:
         # spread of scores between [0, 1] instead of default base e which is more like [0, 0.83]
         #
         # ref: https://docs.scipy.org/doc/scipy-1.5.2/reference/generated/scipy.spatial.distance.jensenshannon.html
-        jsd = jensenshannon(actual + 1e-9, predicted + 1e-9, base=2)
+        jsd = jensenshannon(gt + 1e-9, dp + 1e-9, base=2)
 
         # get the overall penalty for hallucinating counts
         misleading_presence_mask = (gt == 0) & (dp > 0)
