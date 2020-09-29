@@ -4,7 +4,15 @@
 
 Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1). This repository contains the definition of the environment where your code submissions will run. It specifies both the operating system and the software packages that will be available to your solution.
 
-This repository has two primary uses for competitors:
+This repository has three primary uses for competitors:
+
+- **Competitor pack for developing your solutions**: You can find here some helpful materials as you build and test your solution:
+
+    * A copy of the [competition data](https://github.com/drivendataorg/deid2-runtime/tree/master/data)
+    * A [baseline solution](https://github.com/drivendataorg/deid2-runtime/tree/master/benchmark) implemented in python
+    * A [sample privacy write-up](https://github.com/drivendataorg/deid2-runtime/tree/master/references) for the baseline
+    * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/tree/master/runtime/scripts) for local testing
+    * A [score visualization script](https://github.com/drivendataorg/deid2-runtime/tree/master/runtime/scripts) that generates an HTML file displaying score outputs by neighborhood and month
 
  - **Testing your code submission**: It lets you test your `submission.zip` file with a locally running version of the container so you don't have to wait for it to process on the competition site to find programming errors.
  - **Requesting new packages in the official runtime**: It lets you test adding additional packages to the [official runtime environment](runtime/py-gpu.yml). The official runtime uses **Python 3.8**. You can then submit a PR to request compatible packages be included in the official container image.
