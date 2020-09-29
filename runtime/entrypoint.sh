@@ -20,17 +20,23 @@ exit_code=0
 
     if [ -f "main.py" ]
     then
-        source activate py-$processor
         echo "Running submission with Python"
-        python main.py
+        conda run -n py-$processor python main.py
     elif [ -f "main.R" ]
     then
-	source activate r-$processor
-	echo "Running submission with R"
+        echo "Running submission with R"
+        conda run -n r-$processor Rscript main.R
     elif [ -f "main" ]
     then
-	echo "Running submission binary"
-	main
+	if [ $(stat -c %A main | cut -c4) = "x" ]
+	then
+            echo "Running submission binary"
+            ./main
+	else
+	    echo -e "ERROR: main is not executable. Please run:\n\n\tchmod u+x main\n\nbefore creating your submission."
+	    exit_code==1
+	fi
+
     else
         echo "ERROR: Could not find main.py, main.R, or executable main in submission.zip"
         exit_code=1
@@ -48,14 +54,11 @@ exit_code=0
         exit_code=1
     fi
 
-    deactivate
-    conda activate py-$processor
-
     # Test that submission is valid
-    pytest
+    conda run -n py-$processor pytest -v
 
     # Score the submission
-    python score.py
+    conda run -n py-$processor python scripts/score.py
 
     echo "================ END ================"
 } |& tee "/codeexecution/submission/log.txt"

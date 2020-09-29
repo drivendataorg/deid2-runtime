@@ -11,4 +11,3 @@ dependencies:
   - r-keras=2.3.0.0=r40h6115d3f_0
   - r-tensorflow=2.2.0=r40h6115d3f_0
   - tensorflow=1.14.0=h4531e10_0
-prefix: /opt/conda/envs/r-cpu
