@@ -9,6 +9,9 @@ ifeq (, $(shell which nvidia-smi))
 CPU_OR_GPU = cpu
 else
 CPU_OR_GPU = gpu
+endif
+
+ifeq (${CPU_OR_GPU}, gpu)
 GPU_ARGS = --gpus all
 endif
 
@@ -116,7 +119,6 @@ ifeq (${SUBMISSION_IMAGE},)
 	$(error To test your submission, you must first run `make pull` (to get official container) or `make build` \
 		(to build a local version if you have changes).)
 endif
-
 	docker run \
 		${TTY_ARGS} \
 		${GPU_ARGS} \

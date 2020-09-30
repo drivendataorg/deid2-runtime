@@ -1,6 +1,5 @@
 #!/bin/bash
 
-processor="gpu"
 exit_code=0
 
 {
@@ -9,11 +8,11 @@ exit_code=0
     # Check for gpu with nvidia-smi
     if [ $(which nvidia-smi) ]
     then
-        :
+	processor="gpu"
     else
-        echo "GPU unavailable; falling back to CPU."
         processor="cpu"
     fi
+    echo "Running $processor image"
 
     echo "Unpacking submission..."
     unzip ./submission/submission.zip -d ./

@@ -40,14 +40,14 @@ Make sure you have the prerequisites installed.
 
 Additional requirements to run with GPU:
 
- - [NVIDIA drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation) with CUDA 11 (we check whether you have `nvidia-smi` installed and enabled to automatically determine whether to build the CPU or GPU image)
+ - [NVIDIA drivers](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation) with **CUDA 11**
  - [NVIDIA Docker container runtime](https://nvidia.github.io/nvidia-container-runtime/)
 
 ### Quickstart
 
-To test out the full execution pipeline, run the following commands in order in the terminal. These will get the Docker images, zip up an example submission script, and run the submission on your locally running version of the container.
+To test out the full execution pipeline, run the following commands in order in the terminal. These will get the Docker images, zip up an example submission script, and run the submission on your locally running version of the container.  The `make` commands will try to select the CPU or GPU image automatically by setting the `CPU_OR_GPU` variable based on whether or not `make` detects `nvidia-smi`. **Note: On machines with `nvidia-smi` but a CUDA version other than 11, `make` will automatically select the GPU image, which will fail. In this case, you will have to set `CPU_OR_GPU=cpu` manually in the commands, e.g., `make pull CPU_OR_GPU=cpu`, `make test-submission CPU_OR_GPU=cpu`.**
 
-```
+```bash
 make pull
 make pack-benchmark
 make test-submission
@@ -70,26 +70,26 @@ docker run \
         --mount type=bind,source=/home/robert/projects/deid2-runtime/data,target=/codeexecution/data,readonly \
         --mount type=bind,source=/home/robert/projects/deid2-runtime/submission,target=/codeexecution/submission \
         --shm-size 8g \
-        46e21f0dad94
-GPU unavailable; falling back to CPU.
+        3acdf7eb7c23
+Running cpu image
 Unpacking submission...
 Archive:  ./submission/submission.zip
  extracting: ./main
   inflating: ./main.py
 Running submission with Python
-2020-09-29 20:26:21.243 | DEBUG    | __main__:main:83 - setting random seed 42
-2020-09-29 20:26:21.243 | INFO     | __main__:main:86 - loading parameters
-2020-09-29 20:26:21.246 | INFO     | __main__:main:93 - laplace scales for each epsilon: {1.0: 20.0, 2.0: 10.0, 10.0: 2.0}
-2020-09-29 20:26:21.246 | INFO     | __main__:main:96 - reading submission format from /codeexecution/data/submission_format.csv ...
-2020-09-29 20:26:21.322 | INFO     | __main__:main:100 - read dataframe with 10,008 rows
-2020-09-29 20:26:21.322 | INFO     | __main__:main:103 - reading raw incident data from /codeexecution/data/incidents.csv ...
-2020-09-29 20:26:22.006 | INFO     | __main__:main:105 - read dataframe with 1,455,608 rows
-2020-09-29 20:26:22.006 | INFO     | __main__:main:107 - counting up incidents by (neighborhood, year, month)
-2020-09-29 20:26:22.006 | DEBUG    | __main__:get_ground_truth:43 - ... creating pivot table
-2020-09-29 20:26:22.376 | DEBUG    | __main__:get_ground_truth:62 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
-2020-09-29 20:26:22.381 | INFO     | __main__:main:111 - privatizing each set of 10,008 counts...
-100%|██████████| 10008/10008 [00:02<00:00, 3345.48it/s]
-2020-09-29 20:26:25.378 | INFO     | __main__:main:141 - writing 10,008 rows out to /codeexecution/submission.csv
+2020-09-30 23:03:35.093 | DEBUG    | __main__:main:83 - setting random seed 42
+2020-09-30 23:03:35.093 | INFO     | __main__:main:86 - loading parameters
+2020-09-30 23:03:35.094 | INFO     | __main__:main:93 - laplace scales for each epsilon: {1.0: 20.0, 2.0: 10.0, 10.0: 2.0}
+2020-09-30 23:03:35.094 | INFO     | __main__:main:96 - reading submission format from /codeexecution/data/submission_format.csv ...
+2020-09-30 23:03:35.161 | INFO     | __main__:main:100 - read dataframe with 10,008 rows
+2020-09-30 23:03:35.161 | INFO     | __main__:main:103 - reading raw incident data from /codeexecution/data/incidents.csv ...
+2020-09-30 23:03:35.689 | INFO     | __main__:main:105 - read dataframe with 1,455,608 rows
+2020-09-30 23:03:35.689 | INFO     | __main__:main:107 - counting up incidents by (neighborhood, year, month)
+2020-09-30 23:03:35.689 | DEBUG    | __main__:get_ground_truth:43 - ... creating pivot table
+2020-09-30 23:03:35.953 | DEBUG    | __main__:get_ground_truth:62 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
+2020-09-30 23:03:35.958 | INFO     | __main__:main:111 - privatizing each set of 10,008 counts...
+100%|██████████| 10008/10008 [00:03<00:00, 3326.75it/s]
+2020-09-30 23:03:38.972 | INFO     | __main__:main:141 - writing 10,008 rows out to /codeexecution/submission.csv
 
 Exporting submission.csv result...
 Script completed its run.
@@ -112,18 +112,18 @@ tests/test_submission.py::test_all_values_are_nonzero PASSED             [100%]
     import imp
 
 -- Docs: https://docs.pytest.org/en/stable/warnings.html
-========================= 6 passed, 1 warning in 2.15s =========================
+========================= 6 passed, 1 warning in 2.19s =========================
 
-2020-09-29 20:26:29.229 | INFO     | __main__:main:64 - reading incidents from /codeexecution/data/incidents.csv ...
+2020-09-30 23:03:42.881 | INFO     | __main__:main:64 - reading incidents from /codeexecution/data/incidents.csv ...
 /home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/numpy/lib/arraysetops.py:580: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
   mask |= (ar1 == a)
-2020-09-29 20:26:29.774 | INFO     | __main__:main:67 - reading submission from /codeexecution/submission.csv ...
-2020-09-29 20:26:29.857 | INFO     | __main__:main:69 - read dataframe with 10,008 rows
-2020-09-29 20:26:29.857 | INFO     | __main__:main:71 - computing ground truth ...
-2020-09-29 20:26:29.857 | DEBUG    | __main__:get_ground_truth:23 - ... creating pivot table
-2020-09-29 20:26:30.233 | DEBUG    | __main__:get_ground_truth:42 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
-2020-09-29 20:26:30.238 | INFO     | __main__:main:73 - read dataframe with 10,008 rows
-2020-09-29 20:26:31.262 | INFO     | __main__:main:79 - OVERALL SCORE: 2895.666472006716
+2020-09-30 23:03:43.422 | INFO     | __main__:main:67 - reading submission from /codeexecution/submission.csv ...
+2020-09-30 23:03:43.503 | INFO     | __main__:main:69 - read dataframe with 10,008 rows
+2020-09-30 23:03:43.503 | INFO     | __main__:main:71 - computing ground truth ...
+2020-09-30 23:03:43.503 | DEBUG    | __main__:get_ground_truth:23 - ... creating pivot table
+2020-09-30 23:03:43.771 | DEBUG    | __main__:get_ground_truth:42 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
+2020-09-30 23:03:43.776 | INFO     | __main__:main:73 - read dataframe with 10,008 rows
+2020-09-30 23:03:44.841 | INFO     | __main__:main:79 - OVERALL SCORE: 2895.666472006716
 
 ================ END ================
 ```
@@ -135,10 +135,10 @@ Running `make` at the terminal will tell you all the commands available in the r
 
 Settings based on your machine:
 CPU_OR_GPU=gpu                  # Whether or not to try to build, download, and run GPU versions
-SUBMISSION_IMAGE=       # ID of the image that will be used when running test-submission
+SUBMISSION_IMAGE=f17a92557e26   # ID of the image that will be used when running test-submission
 
 Available competition images:
-drivendata/deid2-competition:cpu-local (46e21f0dad94); drivendata/deid2-competition:cpu-latest (7efffc575b06);
+drivendata/deid2-competition:gpu-latest (db8768e4b9e2); drivendata/deid2-competition:cpu-396f866056cad9b4a5b2fbb863de45128dba29f1 (4d2b3d51badf); drivendata/deid2-competition:cpu-latest (4d2b3d51badf); drivendata/deid2-competition:gpu-78fdfe0ea77fa2553440e1a673f5fdae944ac995 (f2100d4c3723);
 
 Available commands:
 
