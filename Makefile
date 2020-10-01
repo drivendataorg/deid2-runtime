@@ -54,8 +54,8 @@ test-container: build _submission_write_perms
 	docker run \
 		${TTY_ARGS} \
 		${GPU_ARGS} \
-		--mount type=bind,source=$(shell pwd)/runtime/run-tests.sh,target=/run-tests.sh,readonly \
-		--mount type=bind,source=$(shell pwd)/runtime/tests,target=/tests,readonly \
+		--mount type=bind,source="$(shell pwd)"/runtime/run-tests.sh,target=/run-tests.sh,readonly \
+		--mount type=bind,source="$(shell pwd)"/runtime/tests,target=/tests,readonly \
 		${LOCAL_IMAGE} \
 		/bin/bash -c "bash /run-tests.sh ${CPU_OR_GPU}"
 
@@ -63,8 +63,8 @@ test-container: build _submission_write_perms
 debug-container: build _submission_write_perms
 	docker run \
 		${GPU_ARGS} \
-		--mount type=bind,source=$(shell pwd)/data,target=/codeexecution/data,readonly \
-		--mount type=bind,source=$(shell pwd)/submission,target=/codeexecution/submission \
+		--mount type=bind,source="$(shell pwd)"/data,target=/codeexecution/data,readonly \
+		--mount type=bind,source="$(shell pwd)"/submission,target=/codeexecution/submission \
 		--shm-size 8g \
 		-it \
 		${LOCAL_IMAGE} \
@@ -123,8 +123,8 @@ endif
 		${TTY_ARGS} \
 		${GPU_ARGS} \
 		--network none \
-		--mount type=bind,source=$(shell pwd)/data,target=/codeexecution/data,readonly \
-		--mount type=bind,source=$(shell pwd)/submission,target=/codeexecution/submission \
+		--mount type=bind,source="$(shell pwd)"/data,target=/codeexecution/data,readonly \
+		--mount type=bind,source="$(shell pwd)"/submission,target=/codeexecution/submission \
 	   	--shm-size 8g \
 		${SUBMISSION_IMAGE}
 
