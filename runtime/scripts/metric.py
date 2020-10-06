@@ -32,7 +32,7 @@ class Deid2Metric:
             return 0.0, 0.0, 0.0
 
         # get the overall penalty for bias
-        bias_mask = np.abs(actual - predicted).sum() > self.allowable_raw_bias
+        bias_mask = np.abs(actual.sum() - predicted.sum()) > self.allowable_raw_bias
         bias_penalty = self.bias_penalty if bias_mask.any() else 0
 
         # zero out entries below the threshold
