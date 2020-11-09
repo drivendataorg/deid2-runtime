@@ -18,6 +18,8 @@ packages = [
     "xgboost",
     # ADD ADDITIONAL REQUIREMENTS BELOW HERE #
     ##########################################
+    "cvxpy",
+    "diffprivlib",
 ]
 
 for package in packages:
