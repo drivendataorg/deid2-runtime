@@ -20,6 +20,8 @@ packages = [
     ##########################################
     "cvxpy",
     "diffprivlib",
+    "bm3d",
+    "networkx",
 ]
 
 for package in packages:
