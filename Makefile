@@ -6,9 +6,9 @@
 # ================================================================================================
 
 ifeq (, $(shell which nvidia-smi))
-CPU_OR_GPU = cpu
+CPU_OR_GPU ?= cpu
 else
-CPU_OR_GPU = gpu
+CPU_OR_GPU ?= gpu
 endif
 
 ifeq (${CPU_OR_GPU}, gpu)
