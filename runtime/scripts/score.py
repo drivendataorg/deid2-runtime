@@ -80,7 +80,7 @@ def main(
 
     if json_report:
         row_outcomes = []
-        for idx, score in zip(submission.index, row_scores):
+        for idx, score in zip(ground_truth.index, row_scores):
             epsilon, neighborhood, year, month = idx
             row_outcomes.append(
                 {
