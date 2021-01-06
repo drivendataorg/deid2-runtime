@@ -2,7 +2,7 @@
 
 ![Python 3.8](https://img.shields.io/badge/Python-3.8-blue) [![GPU Docker Image](https://img.shields.io/badge/Docker%20image-gpu--latest-green)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=gpu-latest) [![CPU Docker Image](https://img.shields.io/badge/Docker%20image-cpu--latest-lightgrey)](https://hub.docker.com/r/drivendata/sfp-competition/tags?page=1&name=cpu-latest) 
 
-Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1). This repository contains the definition of the environment where your code submissions will run. It specifies both the operating system and the software packages that will be available to your solution.
+Welcome to the runtime repository for the [NIST De-ID2 Challenge](https://www.drivendata.org/competitions/74/competition-differential-privacy-maps-2/). This repository contains the definition of the environment where your code submissions will run. It specifies both the operating system and the software packages that will be available to your solution.
 
 This repository has three primary uses for competitors:
 
@@ -12,7 +12,7 @@ This repository has three primary uses for competitors:
     * A [baseline solution](https://github.com/drivendataorg/deid2-runtime/tree/master/benchmark) implemented in python
     * A [sample privacy write-up](https://github.com/drivendataorg/deid2-runtime/tree/master/references) for the baseline
     * A number of useful [scripts](https://github.com/drivendataorg/deid2-runtime/tree/master/runtime/scripts), including:
-        * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/score.py) for local testing
+        * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/metric.py) for local testing
         * A [score visualizer](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/create_visualization.py) that generates an HTML file displaying score outputs by neighborhood and month
 
 **(See the [scripts README here](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/README.md))**
@@ -88,53 +88,8 @@ Archive:  ./submission/submission.zip
  extracting: ./main
   inflating: ./main.py
 Running submission with Python
-2020-09-30 23:03:35.093 | DEBUG    | __main__:main:83 - setting random seed 42
-2020-09-30 23:03:35.093 | INFO     | __main__:main:86 - loading parameters
-2020-09-30 23:03:35.094 | INFO     | __main__:main:93 - laplace scales for each epsilon: {1.0: 20.0, 2.0: 10.0, 10.0: 2.0}
-2020-09-30 23:03:35.094 | INFO     | __main__:main:96 - reading submission format from /codeexecution/data/submission_format.csv ...
-2020-09-30 23:03:35.161 | INFO     | __main__:main:100 - read dataframe with 10,008 rows
-2020-09-30 23:03:35.161 | INFO     | __main__:main:103 - reading raw incident data from /codeexecution/data/incidents.csv ...
-2020-09-30 23:03:35.689 | INFO     | __main__:main:105 - read dataframe with 1,455,608 rows
-2020-09-30 23:03:35.689 | INFO     | __main__:main:107 - counting up incidents by (neighborhood, year, month)
-2020-09-30 23:03:35.689 | DEBUG    | __main__:get_ground_truth:43 - ... creating pivot table
-2020-09-30 23:03:35.953 | DEBUG    | __main__:get_ground_truth:62 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
-2020-09-30 23:03:35.958 | INFO     | __main__:main:111 - privatizing each set of 10,008 counts...
-100%|██████████| 10008/10008 [00:03<00:00, 3326.75it/s]
-2020-09-30 23:03:38.972 | INFO     | __main__:main:141 - writing 10,008 rows out to /codeexecution/submission.csv
 
-Exporting submission.csv result...
-Script completed its run.
-============================= test session starts ==============================
-platform linux -- Python 3.8.5, pytest-6.0.2, py-1.9.0, pluggy-0.13.1 -- /home/appuser/miniconda/envs/py-cpu/bin/python
-cachedir: .pytest_cache
-rootdir: /codeexecution
-collecting ... collected 6 items
-
-tests/test_submission.py::test_shape_same PASSED                         [ 16%]
-tests/test_submission.py::test_index_matches PASSED                      [ 33%]
-tests/test_submission.py::test_columns_match PASSED                      [ 50%]
-tests/test_submission.py::test_data_types_match PASSED                   [ 66%]
-tests/test_submission.py::test_all_values_are_finite PASSED              [ 83%]
-tests/test_submission.py::test_all_values_are_nonzero PASSED             [100%]
-
-=============================== warnings summary ===============================
-/home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/tensorflow/python/pywrap_tensorflow_internal.py:15
-  /home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/tensorflow/python/pywrap_tensorflow_internal.py:15: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
-    import imp
-
--- Docs: https://docs.pytest.org/en/stable/warnings.html
-========================= 6 passed, 1 warning in 2.19s =========================
-
-2020-09-30 23:03:42.881 | INFO     | __main__:main:64 - reading incidents from /codeexecution/data/incidents.csv ...
-/home/appuser/miniconda/envs/py-cpu/lib/python3.8/site-packages/numpy/lib/arraysetops.py:580: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-  mask |= (ar1 == a)
-2020-09-30 23:03:43.422 | INFO     | __main__:main:67 - reading submission from /codeexecution/submission.csv ...
-2020-09-30 23:03:43.503 | INFO     | __main__:main:69 - read dataframe with 10,008 rows
-2020-09-30 23:03:43.503 | INFO     | __main__:main:71 - computing ground truth ...
-2020-09-30 23:03:43.503 | DEBUG    | __main__:get_ground_truth:23 - ... creating pivot table
-2020-09-30 23:03:43.771 | DEBUG    | __main__:get_ground_truth:42 - ... duplicating the counts for every (neighborhood, year, month) to each epsilon
-2020-09-30 23:03:43.776 | INFO     | __main__:main:73 - read dataframe with 10,008 rows
-2020-09-30 23:03:44.841 | INFO     | __main__:main:79 - OVERALL SCORE: 2895.666472006716
+TODO: REPLACE WITH ACTUAL SNIPPET
 
 ================ END ================
 ```
@@ -175,7 +130,7 @@ In Docker parlance, your computer is the "host" that runs the container. The con
  - the `data` directory on the host machine is mounted in the container as a read-only directory `/codeexecution/data`
  - the `submission` directory on the host machine is mounted in the container as `/codeexecution/submission`
 
-When you make a submission, the code execution platform will unzip your submission assets to the `/codeexecution` folder. This must result in either a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`. On the official code execution platform, we will take care of mounting the data―you can assume your submission will have access to `incidents.csv`, `parameters.json`, and `submission_format.csv` in `/codeexecution/data`. You are responsible for creating the submission script that will read from `/codeexecution/data` and write to `/codeexecution/submission.csv`. Keep in mind that your submission will not have access to the internet, so everything it needs to run must be provided in the `submission.zip` you create. (You _are_ permitted to write intermediate files to `/codeexecution/submission`.)
+When you make a submission, the code execution platform will unzip your submission assets to the `/codeexecution` folder. This must result in either a `main.py`, `main.R`, or `main` executable binary in the `/codeexecution`. On the official code execution platform, we will take care of mounting the data―you can assume your submission will have access to `ground_truth.csv`, `parameters.json`, and `submission_format.csv` in `/codeexecution/data`. You are responsible for creating the submission script that will read from `/codeexecution/data` and write to `/codeexecution/submission.csv`. Keep in mind that your submission will not have access to the internet, so everything it needs to run must be provided in the `submission.zip` you create. (You _are_ permitted to write intermediate files to `/codeexecution/submission`.)
 
 ### Implement your solution
 
@@ -183,7 +138,7 @@ In order to test your code submission, you will need a code submission! Implemen
 
 **Note: You will implement all of your training and experiments on your machine. It is highly recommended that you use the same package versions that are in the runtime ([Python (CPU)](runtime/py-cpu.yml), [Python (GPU)](runtime/py-gpu.yml), [R (CPU)](runtime/r-cpu.yml), or [R (GPU)](runtime/r-gpu.yml)). They can be installed with `conda`.**
 
-The [submission format page](https://www.drivendata.org/competitions/68/competition-differential-privacy-maps-1/page/260/#submissions) contains the detailed information you need to prepare your submission.
+The [submission format page](https://www.drivendata.org/competitions/74/competition-differential-privacy-maps-2/page/282/#submissions) contains the detailed information you need to prepare your submission.
 
 ### Example benchmark submission
 
@@ -207,7 +162,7 @@ This will start the container, mount the local data and submission folders as fo
 
 ### Reviewing the logs
 
-When you run `make test-submission` the logs will be printed to the terminal. They will also be written to the `submission` folder as `log.txt`. You can always review that file and copy any versions of it that you want from the `submission` folder. The errors there will help you to determine what changes you need to make so your code executes successfully.
+When you run `make test-submission` the logs will be printed to the terminal. They will also be written to the `submission` folder as `log.txt`. You can always review that file and copy any versions of it that you want from the `submission` folder. The errors there will help you to determine what changes you need to make sure your code executes successfully.
 
 ## (2) Updating the runtime packages
 
