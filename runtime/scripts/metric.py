@@ -99,7 +99,9 @@ class TidyFormatKMarginalMetric:
 
         # combine the dataframes into one, groupable df
         self.combined_df = (
-            pd.concat([raw_actual_df.assign(actual=1), raw_submitted_df.assign(actual=0)])
+            pd.concat(
+                [raw_actual_df.assign(actual=1), raw_submitted_df.assign(actual=0)]
+            )
             .set_index(["PUMA", "YEAR"])
             .sort_index()
         )
@@ -115,7 +117,9 @@ class TidyFormatKMarginalMetric:
         self.n_puma_years = len(self.puma_year_index)
 
         self.bias_penalty_cutoff = bias_penalty_cutoff
-        self.marginal_group_cols = list(sorted(set(COLS.keys()) - set(["PUMA", "YEAR"])))
+        self.marginal_group_cols = list(
+            sorted(set(COLS.keys()) - set(["PUMA", "YEAR"]))
+        )
         self.random_seed = random_seed or 123456
         self.verbose = verbose
         self.processes = processes
@@ -126,10 +130,14 @@ class TidyFormatKMarginalMetric:
         schema_errors = defaultdict(list)
         for c, conds in schema.items():
             if c not in submission_df.columns:
-                schema_errors[c] += [f"expected column {c} in data but it was not present"]
+                schema_errors[c] += [
+                    f"expected column {c} in data but it was not present"
+                ]
                 continue
             if "values" in conds:
-                invalid_values = list(set(submission_df[c].tolist()) - set(conds["values"]))
+                invalid_values = list(
+                    set(submission_df[c].tolist()) - set(conds["values"])
+                )
                 if invalid_values:
                     schema_errors[c] += [
                         "invalid values '{}' (accepted values '{}')".format(
@@ -146,7 +154,9 @@ class TidyFormatKMarginalMetric:
             if "max" in conds:
                 if submission_df[c].max() > conds["max"]:
                     schema_errors[c] += [
-                        "contains values greater than maximum ({})".format(conds["max"],)
+                        "contains values greater than maximum ({})".format(
+                            conds["max"],
+                        )
                     ]
 
         if schema_errors:
@@ -163,13 +173,16 @@ class TidyFormatKMarginalMetric:
 
         # calculate the sizes of each epsilon run and add to the df
         runs_df = pd.concat(
-            [runs_df, submission_df.groupby("epsilon").size().rename("row_count")], axis=1
+            [runs_df, submission_df.groupby("epsilon").size().rename("row_count")],
+            axis=1,
         )
 
         # max_records + delta are nan for epsilons in submission but not in parameters.json
         invalid_epsilons = runs_df[runs_df.max_records.isnull()].index.tolist()
         if invalid_epsilons:
-            raise ValueError("Submission has invalid epsilon: {}".format(invalid_epsilons))
+            raise ValueError(
+                "Submission has invalid epsilon: {}".format(invalid_epsilons)
+            )
 
         # if the observed rows for an epsilon (row_count) larger than max records, error
         invalid_counts = runs_df[runs_df.row_count > runs_df.max_records].index.tolist()
@@ -196,7 +209,9 @@ class TidyFormatKMarginalMetric:
         rand = np.random.RandomState(seed=self.random_seed)
         for _ in range(self.n_permutations):
             # grab the next set of K columns to marginalize
-            features_i = rand.choice(self.marginal_group_cols, size=self.k, replace=False).tolist()
+            features_i = rand.choice(
+                self.marginal_group_cols, size=self.k, replace=False
+            ).tolist()
             # we are going to group by the columns we always group by and also the K columns
             yield features_i
 
@@ -247,7 +262,8 @@ def score_submission(
         50, help="Number of different permutations of columns to average"
     ),
     bias_penalty_cutoff: int = typer.Option(
-        250, help="Absolute difference in PUMA-YEAR counts permitted before applying bias penalty"
+        250,
+        help="Absolute difference in PUMA-YEAR counts permitted before applying bias penalty",
     ),
     parameters_json: Path = typer.Option(
         None,
@@ -272,7 +288,9 @@ def score_submission(
         parameters = json.loads(parameters_json.read_text())
         logger.debug(f"checking that submission matches schema ...")
         TidyFormatKMarginalMetric._assert_sub_matches_schema(submission_df, parameters)
-        logger.debug(f"checking that submission meets length limits and has proper epsilons ...")
+        logger.debug(
+            f"checking that submission meets length limits and has proper epsilons ..."
+        )
         TidyFormatKMarginalMetric._assert_sub_less_than_limit_and_epsilons_valid(
             submission_df, parameters
         )
@@ -306,7 +324,9 @@ def score_submission(
         logger.info(f"starting calculation for epsilon={epsilon}")
         epsilon_score = metric.overall_score()
         if metric.bias_mask.sum():
-            logger.warning(f"warning: {metric.bias_mask.sum()} PUMA-YEARs received a bias penalty")
+            logger.warning(
+                f"warning: {metric.bias_mask.sum()} PUMA-YEARs received a bias penalty"
+            )
         logger.success(f"score for epsilon {epsilon}: {epsilon_score}")
         scores_per_epsilon.append(epsilon_score)
 
