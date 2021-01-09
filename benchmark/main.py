@@ -44,10 +44,11 @@ def simulate_row(parameters, epsilon=None, sim_individual_id=None):
 
 
 def main(
-        parameters_file: Path = DEFAULT_PARAMS,
-        ground_truth_file: Path = DEFAULT_GROUND_TRUTH,
-        output_file: Path = DEFAULT_OUTPUT,
-        random_seed: int = 42,
+    parameters_file: Path = DEFAULT_PARAMS,
+    ground_truth_file: Path = DEFAULT_GROUND_TRUTH,
+    output_file: Path = DEFAULT_OUTPUT,
+    n_rows_to_simulate_per_epsilon: int = 20_000,
+    random_seed: int = 42,
 ):
     """
     Create synthetic data appropriate to be submitted to the Sprint 2 competition.
@@ -64,11 +65,12 @@ def main(
     #       private if you are using the ground truth.                                     #
     ########################################################################################
     logger.info(f"reading ground truth from {ground_truth_file} ...")
-    dtypes = {column_name: d["dtype"] for column_name, d in parameters["schema"].items()}
+    dtypes = {
+        column_name: d["dtype"] for column_name, d in parameters["schema"].items()
+    }
     ground_truth = pd.read_csv(ground_truth_file, dtype=dtypes)
     logger.info(f"... read ground truth dataframe of shape {ground_truth.shape}")
 
-    n_rows_to_simulate_per_epsilon = len(ground_truth)
     epsilons = [run["epsilon"] for run in parameters["runs"]]
     columns = list(parameters["schema"].keys())
     headers = ["epsilon"] + columns + ["sim_individual_id"]
@@ -83,15 +85,14 @@ def main(
             logger.info(f"starting simulation for epsilon={epsilon}")
             for i in trange(n_rows_to_simulate_per_epsilon):
                 ################################################################################
-                # NOTE: Naively simulate only one row per individual (and lazily use iteration #
+                # NOTE: Naively assume only one row per individual (and lazily use iteration   #
                 #       number as the simulated individual ID).                                #
                 ################################################################################
-                row = simulate_row(
-                    parameters, epsilon=epsilon, sim_individual_id=i
-                )
+                row = simulate_row(parameters, epsilon=epsilon, sim_individual_id=i)
                 output.writerow(row)
                 n_rows += 1
     logger.success(f"finished writing {n_rows} to {output_file}")
+
 
 if __name__ == "__main__":
     typer.run(main)
