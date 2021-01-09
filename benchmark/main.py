@@ -91,7 +91,7 @@ def main(
                 row = simulate_row(parameters, epsilon=epsilon, sim_individual_id=i)
                 output.writerow(row)
                 n_rows += 1
-    logger.success(f"finished writing {n_rows} to {output_file}")
+    logger.success(f"finished writing {n_rows:,} rows to {output_file}")
 
 
 if __name__ == "__main__":
