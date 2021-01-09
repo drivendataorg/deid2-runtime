@@ -20,11 +20,11 @@ exit_code=0
     if [ -f "main.py" ]
     then
         echo "Running submission with Python"
-        conda run -n py-$processor python main.py
+        conda run --no-capture-output -n py-$processor python main.py
     elif [ -f "main.R" ]
     then
         echo "Running submission with R"
-        conda run -n r-$processor Rscript main.R
+        conda run --no-capture-output -n r-$processor Rscript main.R
     elif [ -f "main" ]
     then
 	if [ $(stat -c %A main | cut -c4) = "x" ]
