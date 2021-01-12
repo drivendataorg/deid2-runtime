@@ -26,30 +26,30 @@ def parameters():
 
 def test_first_columns_is_epsilon(submission):
     assert (
-            submission.columns[0] == "epsilon"
+        submission.columns[0] == "epsilon"
     ), "First column of submission must be 'epsilon'"
 
 
 def test_last_column_is_sim_individual_id(submission):
     assert (
-            submission.columns[-1] == "sim_individual_id"
+        submission.columns[-1] == "sim_individual_id"
     ), "Last column of submission must be 'sim_individual_id'"
 
 
 def test_all_columns_match(submission, parameters):
     expected_data_columns = (
-            ["epsilon"] + list(parameters["schema"].keys()) + ["sim_individual_id"]
+        ["epsilon"] + list(parameters["schema"].keys()) + ["sim_individual_id"]
     )
     found_data_columns = submission.columns.tolist()
     assert (
-            found_data_columns == expected_data_columns
+        found_data_columns == expected_data_columns
     ), f"Submission columns not as expected"
 
 
 def test_submission_matches_schema(submission, parameters):
     for c, entry in parameters["schema"].items():
         assert (
-                c in submission.columns
+            c in submission.columns
         ), f"expected column {i} to be {c} in data but it was not present"
         if "values" in entry:
             invalid_values = list(set(submission[c].tolist()) - set(entry["values"]))
