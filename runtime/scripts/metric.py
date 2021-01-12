@@ -58,8 +58,8 @@ BINS = {
     "POVERTY": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
     "HHWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
     "PERWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
-    "DEPARTS": np.r_[-np.inf, np.arange(0, 2500, 100), np.inf],
-    "ARRIVES": np.r_[-np.inf, np.arange(0, 2500, 100), np.inf],
+    "DEPARTS": np.r_[-np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf],
+    "ARRIVES": np.r_[-np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf],
 }
 
 
