@@ -66,30 +66,41 @@ make test-submission
 You should see output like this in the end (and find the same logs in the folder `submission/log.txt`):
 
 ```
-➜ make pack-benchmark
+$ make pack-benchmark
 cd benchmark; zip -r ../submission/submission.zip ./*
   adding: main (stored 0%)
   adding: main.py (deflated 62%)
 
-➜ make test-submission
+$ CPU_OR_GPU=cpu make test-submission
 chmod -R 0777 submission/
 docker run \
         -it \
          \
         --network none \
-        --mount type=bind,source=/home/robert/projects/deid2-runtime/data,target=/codeexecution/data,readonly \
-        --mount type=bind,source=/home/robert/projects/deid2-runtime/submission,target=/codeexecution/submission \
+        --mount type=bind,source="/path/to/deid2-runtime"/data,target=/codeexecution/data,readonly \
+        --mount type=bind,source="/path/to/deid2-runtime"/submission,target=/codeexecution/submission \
         --shm-size 8g \
-        3acdf7eb7c23
+        94e69714ceed
 Running cpu image
 Unpacking submission...
 Archive:  ./submission/submission.zip
- extracting: ./main
-  inflating: ./main.py
+  inflating: ./main.py               
 Running submission with Python
-
-TODO: REPLACE WITH ACTUAL SNIPPET
-
+2021-01-13 20:39:24.038 | INFO     | __main__:main:46 - reading schema from /codeexecution/data/parameters.json ...
+2021-01-13 20:39:24.038 | INFO     | __main__:main:55 - reading ground truth from /codeexecution/data/ground_truth.csv ...
+2021-01-13 20:39:26.451 | INFO     | __main__:main:60 - ... read ground truth dataframe of shape (1033968, 36)
+2021-01-13 20:39:26.451 | INFO     | __main__:main:67 - writing output to /codeexecution/submission.csv
+2021-01-13 20:39:26.452 | INFO     | __main__:main:73 - starting simulation for epsilon=0.1
+100%|██████████| 20000/20000 [00:01<00:00, 16472.22it/s]
+2021-01-13 20:39:27.671 | INFO     | __main__:main:73 - starting simulation for epsilon=1.0
+100%|██████████| 20000/20000 [00:01<00:00, 16697.68it/s]
+2021-01-13 20:39:28.869 | INFO     | __main__:main:73 - starting simulation for epsilon=10.0
+100%|██████████| 20000/20000 [00:01<00:00, 16905.44it/s]
+2021-01-13 20:39:30.053 | SUCCESS  | __main__:main:84 - finished writing 60,001 rows to /codeexecution/submission.csv
+2021-01-13 20:39:30.053 | INFO     | __main__:main:86 - reading and writing one final time casting to correct dtypes ...
+2021-01-13 20:39:31.014 | SUCCESS  | __main__:main:91 - ... done.
+Exporting submission.csv result...
+Script completed its run.
 ================ END ================
 ```
 
