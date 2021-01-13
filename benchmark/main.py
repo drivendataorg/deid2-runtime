@@ -66,7 +66,7 @@ def main(
     # start writing the CSV with headers
     logger.info(f"writing output to {output_file}")
     with output_file.open("w", newline="") as fp:
-        output = csv.DictWriter(fp, fieldnames=headers, dialect="unix")
+        output = csv.DictWriter(fp, fieldnames=headers, dialect="unix", quoting=csv.QUOTE_NONNUMERIC)
         output.writeheader()
         n_rows = 1
         for epsilon in epsilons:
@@ -82,6 +82,13 @@ def main(
                 output.writerow(row)
                 n_rows += 1
     logger.success(f"finished writing {n_rows:,} rows to {output_file}")
+
+    logger.info("reading and writing one final time casting to correct dtypes ...")
+    df = pd.read_csv(output_file)
+    for col_name, d in parameters["schema"].items():
+        df[col_name] = df[col_name].astype(d["dtype"])
+    df.to_csv(output_file, index=False)
+    logger.success(f"... done.")
 
 
 if __name__ == "__main__":
