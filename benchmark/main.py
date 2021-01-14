@@ -35,10 +35,10 @@ def simulate_row(parameters):
 
 
 def main(
-        parameters_file: Path = DEFAULT_PARAMS,
-        ground_truth_file: Path = DEFAULT_GROUND_TRUTH,
-        output_file: Path = DEFAULT_OUTPUT,
-        n_rows_to_simulate_per_epsilon: int = 20_000,
+    parameters_file: Path = DEFAULT_PARAMS,
+    ground_truth_file: Path = DEFAULT_GROUND_TRUTH,
+    output_file: Path = DEFAULT_OUTPUT,
+    n_rows_to_simulate_per_epsilon: int = 20_000,
 ):
     """
     Create synthetic data appropriate to be submitted to the Sprint 2 competition.
@@ -66,7 +66,9 @@ def main(
     # start writing the CSV with headers
     logger.info(f"writing output to {output_file}")
     with output_file.open("w", newline="") as fp:
-        output = csv.DictWriter(fp, fieldnames=headers, dialect="unix", quoting=csv.QUOTE_NONNUMERIC)
+        output = csv.DictWriter(
+            fp, fieldnames=headers, dialect="unix", quoting=csv.QUOTE_NONNUMERIC
+        )
         output.writeheader()
         n_rows = 1
         for epsilon in epsilons:

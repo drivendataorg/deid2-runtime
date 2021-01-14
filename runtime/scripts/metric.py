@@ -58,8 +58,12 @@ BINS = {
     "POVERTY": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
     "HHWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
     "PERWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
-    "DEPARTS": np.r_[-np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf],
-    "ARRIVES": np.r_[-np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf],
+    "DEPARTS": np.r_[
+        -np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf
+    ],
+    "ARRIVES": np.r_[
+        -np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf
+    ],
 }
 
 
@@ -242,12 +246,12 @@ class TidyFormatKMarginalMetric:
         # get the matrix of scores for each PUMA-YEAR (row) and k-col permutation (col)
         all_scores = self.k_marginal_scores()
         # take the row-wise mean to get the score per PUMA-YEAR
-        scores = all_scores.mean(axis=1).ravel()
+        self._scores = all_scores.mean(axis=1).ravel()
         # any individual PUMA-YEARs over the bias limit get the maximum penalty
         bias_mask = self.get_bias_mask()
-        scores[bias_mask] = 2.0
+        self._scores[bias_mask] = 2.0
         # return the mean of the scores per PUMA-YEAR for an overall score
-        mean_score = scores.mean()
+        mean_score = self._scores.mean()
         nist_score = ((2.0 - mean_score) / 2.0) * 1_000
         return nist_score
 
@@ -268,6 +272,10 @@ def score_submission(
     parameters_json: Path = typer.Option(
         None,
         help="Path to parameters.json; if provided, validates the submission using the schema",
+    ),
+    report_path: Path = typer.Option(
+        None,
+        help="Output path to save a JSON report file detailing scores at the PUMA-YEAR level",
     ),
     processes: int = typer.Option(None, help="Number of parallel processes to run"),
     verbose: bool = True,
@@ -304,6 +312,7 @@ def score_submission(
 
     epsilons = submission_df["epsilon"].unique()
     scores_per_epsilon = []
+    report = {"details": []}
     for epsilon in epsilons:
         epsilon_mask = submission_df.epsilon == epsilon
         n_rows = epsilon_mask.sum()
@@ -327,6 +336,20 @@ def score_submission(
             logger.warning(
                 f"warning: {metric.bias_mask.sum()} PUMA-YEARs received a bias penalty"
             )
+
+        # save out some records from this run if the user would like to output a report
+        if report_path is not None:
+            for i, ((puma, year), bias) in enumerate(metric.bias_mask.items()):
+                nist_score = ((2.0 - metric._scores[i]) / 2.0) * 1_000
+                record = {
+                    "epsilon": epsilon,
+                    "PUMA": puma,
+                    "YEAR": year,
+                    "score": nist_score,
+                    "bias_penalty": bias,
+                }
+                report["details"].append(record)
+
         logger.success(f"score for epsilon {epsilon}: {epsilon_score}")
         scores_per_epsilon.append(epsilon_score)
 
@@ -335,6 +358,12 @@ def score_submission(
     logger.success(
         f"finished scoring all epsilons: OVERALL SCORE = {mean_score} (per epsilon: {score_dict})"
     )
+
+    if report_path is not None:
+        with report_path.open("w") as fp:
+            logger.info(f"writing out run report to {report_path}")
+            json.dump(report, fp)
+            logger.success(f"wrote out run report to {report_path}")
     return mean_score
 
 

@@ -319,6 +319,9 @@ Options:
   --parameters-json PATH          Path to parameters.json; if provided,
                                   validates the submission using the schema
 
+  --report-path PATH              Output path to save a JSON report file
+                                  detailing scores at the PUMA-YEAR level
+
   --processes INTEGER             Number of parallel processes to run
   --verbose / --no-verbose        [default: True]
 
@@ -333,7 +336,50 @@ python runtime/scripts/metric.py \
   --verbose \
   --processes 4 \
   --parameters-json data/parameters.json \
-  data/ground_truth.csv /tmp/submission.csv 
+  --report-path /tmp/report.json \
+  data/ground_truth.csv \
+  /tmp/submission.csv 
+```
+
+### `runtime/scripts/create_visualization.py`
+
+Given the score report output above, generate a useful visualization which may
+be helpful for troubleshooting where the privatization needs attention. If you open
+the generated HTML file in your browser and let it load, you should see a choropleth
+of Ohio and Illinois, the two states in the public data:
+
+![](https://drivendata-competition-deid2-public.s3.amazonaws.com/visualization/screenshot2.png)
+
+This script assumes that you have run the `metric.py` scoring script with the `--report-json`
+option to generate a detailed summary of results per epsilon and PUMA-YEAR.
+
+#### Usage
+
+```
+Usage: create_visualization.py [OPTIONS] JSON_REPORT PARAMS_FILE
+
+  Take the output of a `score.py` run and create an interactive HTML/JS
+  visualization.
+
+Arguments:
+  JSON_REPORT  [required]
+  PARAMS_FILE  [required]
+
+Options:
+  --template-path PATH [only used for testing, or if you'd like to tweak the template]
+
+  --help                          Show this message and exit.
+```
+
+#### Example for local use
+
+We pass in the report created above, the parameters file, and send the output to
+a file that we can open locally in the browser.
+
+```
+python runtime/scripts/create_visualization.py \
+  /tmp/report.json data/parameters.json \
+  > /tmp/report.html
 ```
 
 ---
