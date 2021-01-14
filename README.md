@@ -341,6 +341,8 @@ python runtime/scripts/metric.py \
   /tmp/submission.csv 
 ```
 
+---
+
 ### `runtime/scripts/create_visualization.py`
 
 Given the score report output above, generate a useful visualization which may
