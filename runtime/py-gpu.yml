@@ -26,4 +26,3 @@ dependencies:
     - bm3d==3.0.7
     - networkx
     - cupy
-    
