@@ -22,7 +22,6 @@ packages = [
     "diffprivlib",
     "bm3d",
     "networkx",
-    "cupy",
 ]
 
 for package in packages:
