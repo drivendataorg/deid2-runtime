@@ -22,7 +22,7 @@ dependencies:
   - xgboost=1.2.0=py38h950e882_0
   - cvxpy=1.1.7=py38h950e882_0
   - diffprivlib=0.3.0=pyh9f0ad1d_0
+  - cupy=8.0.0
   - pip:
     - bm3d==3.0.7
     - networkx
-    - cupy
