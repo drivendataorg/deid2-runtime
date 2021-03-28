@@ -30,27 +30,26 @@ def test_first_columns_is_epsilon(submission):
     ), "First column of submission must be 'epsilon'"
 
 
-def test_last_column_is_sim_individual_id(submission):
+def test_second_column_is_taxi_id(submission):
     assert (
-        submission.columns[-1] == "sim_individual_id"
-    ), "Last column of submission must be 'sim_individual_id'"
+        submission.columns[1] == "taxi_id"
+    ), "Last column of submission must be 'taxi_id'"
 
 
 def test_all_columns_match(submission, parameters):
-    expected_data_columns = (
-        ["epsilon"] + list(parameters["schema"].keys()) + ["sim_individual_id"]
-    )
+    columns = [k for k in parameters["schema"].keys() if k != "taxi_id"]
+    expected_data_columns = ["epsilon", "taxi_id"] + columns
     found_data_columns = submission.columns.tolist()
     assert (
         found_data_columns == expected_data_columns
-    ), f"Submission columns not as expected"
+    ), "Submission columns not as expected"
 
 
 def test_submission_matches_schema(submission, parameters):
     for c, entry in parameters["schema"].items():
         assert (
             c in submission.columns
-        ), f"expected column {i} to be {c} in data but it was not present"
+        ), f"expected column {c} to be in data but it was not present"
         if "values" in entry:
             invalid_values = list(set(submission[c].tolist()) - set(entry["values"]))
             err_msg = f"column {c} contains invalid values '{invalid_values}' (accepted values '{entry['values']}')"
@@ -58,7 +57,7 @@ def test_submission_matches_schema(submission, parameters):
         if "min" in entry:
             err_msg = f"column {c} contains values less than minimum ({entry['min']})"
             assert submission[c].min() >= entry["min"], err_msg
-        if "max" in entry:
+        if "max" in entry and entry["max"] is not None:
             err_msg = (
                 f"column {c} contains values greater than maximum ({entry['max']})"
             )
@@ -83,6 +82,12 @@ def test_max_rows_and_max_rows_per_individual(submission, parameters):
     assert (
         not invalid_counts
     ), f"Some epsilon runs have too many individuals. Epsilons are: {invalid_counts}"
+
+    # calculate number of records per individual
+    for run in parameters["runs"]:
+        mask = submission.epsilon == run["epsilon"]
+        counts_per_individual = submission.loc[mask].taxi_id.value_counts()
+        assert counts_per_individual.max() <= run["max_records_per_individual"]
 
 
 def test_epsilons_valid(submission, parameters):

@@ -1,4 +1,6 @@
 import json
+import shutil
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -6,65 +8,102 @@ import numpy as np
 import pandas as pd
 import typer
 from loguru import logger
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 import multiprocessing
 
-COLS = {
-    "PUMA": "str",
-    "YEAR": "uint32",
-    "HHWT": "float",
-    "GQ": "uint8",
-    "PERWT": "float",
-    "SEX": "uint8",
-    "AGE": "uint8",
-    "MARST": "uint8",
-    "RACE": "uint8",
-    "HISPAN": "uint8",
-    "CITIZEN": "uint8",
-    "SPEAKENG": "uint8",
-    "HCOVANY": "uint8",
-    "HCOVPRIV": "uint8",
-    "HINSEMP": "uint8",
-    "HINSCAID": "uint8",
-    "HINSCARE": "uint8",
-    "EDUC": "uint8",
-    "EMPSTAT": "uint8",
-    "EMPSTATD": "uint8",
-    "LABFORCE": "uint8",
-    "WRKLSTWK": "uint8",
-    "ABSENT": "uint8",
-    "LOOKING": "uint8",
-    "AVAILBLE": "uint8",
-    "WRKRECAL": "uint8",
-    "WORKEDYR": "uint8",
-    "INCTOT": "int32",
-    "INCWAGE": "int32",
-    "INCWELFR": "int32",
-    "INCINVST": "int32",
-    "INCEARN": "int32",
-    "POVERTY": "uint32",
-    "DEPARTS": "uint32",
-    "ARRIVES": "uint32",
+COL_TYPES = {
+    "company_id": "int8",
+    "dropoff_community_area": "int8",
+    "fare": "int16",
+    "payment_type": "int8",
+    "pickup_community_area": "int8",
+    "shift": "uint8",
+    "tips": "int16",
+    "trip_day_of_week": "int8",
+    "trip_hour_of_day": "int8",
+    "trip_miles": "int16",
+    "trip_seconds": "int32",
+    "trip_total": "int16",
 }
 
+CATEGORICAL_COLS = [
+    "company_id",
+    "pickup_community_area",
+    "dropoff_community_area",
+    "trip_day_of_week",
+    "trip_hour_of_day",
+    "shift",
+    "payment_type",
+]
+
+NUMERIC_COLS = [
+    "fare",
+    "tips",
+    "trip_total",
+    "trip_seconds",
+    "trip_miles",
+]
+
 BINS = {
-    "AGE": np.r_[-np.inf, np.arange(20, 105, 5), np.inf],
-    "INCTOT": np.r_[-np.inf, np.arange(0, 105_000, 5_000), np.inf],
-    "INCWAGE": np.r_[-np.inf, np.arange(0, 105_000, 5_000), np.inf],
-    "INCWELFR": np.r_[-np.inf, np.arange(0, 105_000, 5_000), np.inf],
-    "INCINVST": np.r_[-np.inf, np.arange(0, 105_000, 5_000), np.inf],
-    "INCEARN": np.r_[-np.inf, np.arange(0, 105_000, 5_000), np.inf],
-    "POVERTY": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
-    "HHWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
-    "PERWT": np.r_[-np.inf, np.arange(0, 520, 20), np.inf],
-    "DEPARTS": np.r_[
-        -np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf
-    ],
-    "ARRIVES": np.r_[
-        -np.inf, [h * 100 + m for h in range(24) for m in (0, 15, 30, 45)], np.inf
-    ],
+    "fare": np.r_[-np.inf, np.arange(0, 100, step=10), np.inf],
+    "tips": np.r_[-np.inf, np.arange(0, 100, step=10), np.inf],
+    "trip_total": np.r_[-np.inf, np.arange(0, 100, step=10), np.inf],
+    "trip_seconds": np.r_[-np.inf, np.arange(0, 2000, step=200), np.inf],
+    "trip_miles": np.r_[-np.inf, np.arange(0, 100, step=10), np.inf],
 }
+ALWAYS_GROUP_BY = ["pickup_community_area", "shift"]
+MARGINAL_COLS = [
+    "company_id",
+    "dropoff_community_area",
+    "payment_type",
+    "fare",
+    "tips",
+    "trip_total",
+    "trip_seconds",
+    "trip_miles",
+]
+PICKUP_DROPOFF_COLS = ["pickup_community_area", "dropoff_community_area"]
+
+# kmarginal constants
+K_MARGINAL_BIAS_PENALTY_CUTOFF = 250
+PERMUTATIONS = [
+    ALWAYS_GROUP_BY + [c1, c2]
+    for c1 in MARGINAL_COLS
+    for c2 in MARGINAL_COLS
+    if c1 != c2
+]
+PRECALC_DIR = Path(tempfile.gettempdir()) / "kmarginal"
+PRECALC_GT_DIR = PRECALC_DIR / "gt"
+PRECALC_DP_DIR = PRECALC_DIR / "dp"
+
+# higher order conjunction constants
+HIGHER_ORDER_CONJUNCTION_ITERS = 50
+MIN_HOC_DIFF = 5
+MAX_HOC_DIFF = 50
+
+
+def bin_numerics(df):
+    for col in df.columns:
+        if col in BINS:
+            df.loc[:, col] = pd.cut(df[col], BINS[col], right=False, labels=False)
+            if len(BINS[col]) < 255:
+                df.loc[:, col] = df[col].astype(np.uint8)
+    return df
+
+
+def _get_counts(perm):
+    filename = "-".join(perm)
+    index_cols = list(range(len(perm)))
+    dp = pd.read_csv(PRECALC_DP_DIR / filename, index_col=index_cols)
+    gt = pd.read_csv(PRECALC_GT_DIR / filename, index_col=index_cols)
+    counts = dp.join(gt, how="outer").fillna(0).astype(np.int)
+    return counts
+
+
+def _kmarginal_from_precomputed(perm):
+    counts = _get_counts(perm)
+    return counts.groupby(ALWAYS_GROUP_BY).apply(_apply_metric).rename("-".join(perm))
 
 
 def _apply_metric(counts):
@@ -76,57 +115,27 @@ def _apply_metric(counts):
     return (counts / sums).diff(axis=1).sum(axis=1).abs().sum()
 
 
-def _marginalize(grouped):
-    counts = grouped.size().unstack("actual", fill_value=0)
-    return counts.groupby(["PUMA", "YEAR"]).apply(_apply_metric).values.reshape(-1, 1)
-
-
 class TidyFormatKMarginalMetric:
     """
     Implementation of k-marginal scoring
     """
 
     def __init__(
-        self,
-        raw_actual_df,
-        raw_submitted_df,
-        k,
-        n_permutations,
-        bins_for_numeric_cols=None,
-        random_seed=None,
-        verbose=False,
-        bias_penalty_cutoff=250,
-        processes=1,
+        self, raw_actual_df, raw_submitted_df, random_seed=None, processes=1,
     ):
-        self.k = k
-        self.n_permutations = n_permutations
+        self.random_seed = random_seed or 123456
+        self.processes = processes
+        self.report = {}
 
         # combine the dataframes into one, groupable df
-        self.combined_df = (
-            pd.concat(
-                [raw_actual_df.assign(actual=1), raw_submitted_df.assign(actual=0)]
-            )
-            .set_index(["PUMA", "YEAR"])
-            .sort_index()
-        )
-        del raw_actual_df
-        del raw_submitted_df
-
-        # convert any numeric columns to bins
-        self.bins_for_numeric_cols = bins_for_numeric_cols or {}
-        for col, bins in bins_for_numeric_cols.items():
-            self.combined_df[col] = pd.cut(self.combined_df[col], bins).cat.codes
-
-        self.puma_year_index = self.combined_df.groupby(["PUMA", "YEAR"]).size().index
-        self.n_puma_years = len(self.puma_year_index)
-
-        self.bias_penalty_cutoff = bias_penalty_cutoff
-        self.marginal_group_cols = list(
-            sorted(set(COLS.keys()) - set(["PUMA", "YEAR"]))
-        )
-        self.random_seed = random_seed or 123456
-        self.verbose = verbose
-        self.processes = processes
+        self.ground_truth = raw_actual_df
+        self.submitted = raw_submitted_df
+        PRECALC_GT_DIR.mkdir(exist_ok=True, parents=True)
+        logger.info(f"created working directory at {PRECALC_DIR}")
+        if PRECALC_DP_DIR.exists():
+            logger.warning("found existing submission counts; removing")
+            shutil.rmtree(PRECALC_DP_DIR)
+        PRECALC_DP_DIR.mkdir()
 
     @staticmethod
     def _assert_sub_matches_schema(submission_df, parameters):
@@ -206,79 +215,205 @@ class TidyFormatKMarginalMetric:
                 f"but the following are not present: {list(missing_epsilons)}"
             )
 
-    def groupby_column_permutations(self):
-        """
-        Figure out which permutations of columns to use. Deterministic based on the random seed.
-        """
-        rand = np.random.RandomState(seed=self.random_seed)
-        for _ in range(self.n_permutations):
-            # grab the next set of K columns to marginalize
-            features_i = rand.choice(
-                self.marginal_group_cols, size=self.k, replace=False
-            ).tolist()
-            # we are going to group by the columns we always group by and also the K columns
-            yield features_i
+    def _precompute_marginal_counts(self):
+        todo = PERMUTATIONS + [
+            # for the pickup/dropoff part of the metric
+            PICKUP_DROPOFF_COLS,
+            # for bias mask
+            ALWAYS_GROUP_BY,
+        ]
+        logger.info("precomputing ground truth counts for each permutations ...")
+        for perm in tqdm(todo):
+            filename = "-".join(perm)
+            gt_path = PRECALC_GT_DIR / filename
+            if gt_path.exists():
+                # avoid doing this if it has already been done
+                continue
+            self.ground_truth.loc[:, perm].value_counts().rename(1).to_csv(gt_path)
+        logger.info("precomputing submitted counts for each permutation ...")
+        for perm in tqdm(todo):
+            filename = "-".join(perm)
+            dp_path = PRECALC_DP_DIR / filename
+            self.submitted.loc[:, perm].value_counts().rename(0).to_csv(dp_path)
 
     def k_marginal_scores(self):
-        # set up the columns we need to go through
-        permutations_to_score = (
-            self.combined_df.groupby(["PUMA", "YEAR"] + k_cols + ["actual"])
-            for k_cols in self.groupby_column_permutations()
+        self._precompute_marginal_counts()
+        logger.info(
+            f"running k-marginal count comparisons in parallel with {self.processes} processes..."
         )
         with multiprocessing.Pool(processes=self.processes) as pool:
-            iters = pool.imap(_marginalize, permutations_to_score)
-            if self.verbose:
-                iters = tqdm(iters, total=self.n_permutations)
+            iters = pool.imap(_kmarginal_from_precomputed, PERMUTATIONS)
+            iters = tqdm(iters, total=len(PERMUTATIONS))
             scores = list(iters)
-        return np.hstack(scores)
+        # join all the place/time-respective scores horizontally into a dataframe with a row for
+        # each place/time and a column for each of the k-marginal permutations
+        score_df = pd.concat(scores, axis=1, ignore_index=False, join="outer")
+        return score_df
+
+    def scaled_k_marginal_score(self):
+        # get the matrix of scores for each place/time (row) and k-col permutation (col)
+        score_df = self.k_marginal_scores()
+        # take the row-wise mean to get the score per place/time
+        self._scores = score_df.mean(axis=1)
+        # any individual place/time over the bias limit get the maximum penalty
+        bias_mask = self.get_bias_mask()
+        bias_idxs = bias_mask[bias_mask].index
+        if bias_mask.sum():
+            logger.warning(
+                f"warning: {bias_mask.sum()} place/times received a bias penalty"
+            )
+        self._scores.loc[bias_idxs] = 2.0
+        # get the mean of the scores per place/time for an overall score
+        raw_score = self._scores.mean()
+        # scale to [0, 1] and reverse direction so higher is better
+        scaled_score = (2.0 - raw_score) / 2.0
+        return scaled_score
 
     def get_bias_mask(self):
-        puma_year_counts = (
-            self.combined_df.groupby(["PUMA", "YEAR", "actual"])
-            .size()
-            .unstack("actual", fill_value=0)
-        )
-        abs_errors = puma_year_counts.diff(axis=1).sum(axis=1).abs()
-        self.bias_mask = abs_errors >= self.bias_penalty_cutoff
+        counts = _get_counts(ALWAYS_GROUP_BY)
+        abs_errors = counts.diff(axis=1).sum(axis=1).abs()
+        self.bias_mask = abs_errors >= K_MARGINAL_BIAS_PENALTY_CUTOFF
         return self.bias_mask
 
+    def pickup_dropoff_score(self):
+        counts = _get_counts(PICKUP_DROPOFF_COLS)
+        raw_score = _apply_metric(counts)
+        # scale to [0, 1] and reverse direction so higher is better
+        scaled_score = (2.0 - raw_score) / 2.0
+        return scaled_score
+
+    def higher_order_conjunction(self, n_iters=HIGHER_ORDER_CONJUNCTION_ITERS):
+        """
+        Competition-specific implementation of the Higher Order Conjunction metric.
+        """
+
+        def _count_shift_and_pickup_areas(df):
+            """
+            For each individual (row), count up the number of times each shift is observed
+            and each pickup location is observed and concatenate them into a single count
+            dataframe representing the "kind" of individual this is by WHEN they work (shift) and
+            WHERE they work (pickup_community_area).
+            """
+            by_shift = pd.pivot_table(
+                df.assign(n=1),
+                values="n",
+                index="taxi_id",
+                columns="shift",
+                aggfunc="count",
+                fill_value=0,
+            )
+            by_pickup = pd.pivot_table(
+                df.assign(n=1),
+                values="n",
+                index="taxi_id",
+                columns="pickup_community_area",
+                aggfunc="count",
+                fill_value=0,
+            )
+            return by_shift.join(by_pickup, rsuffix="p")
+
+        def _count_up_how_many_rows_are_similar(raw_counts, arr, max_diffs):
+            """
+            Given a pivot matrix of counts and a single row, figure out how many rows are within the allowable
+            limits of similarity for each column.
+            """
+            # let M be the number of taxi IDs and N be the number of columns
+            abs_err = np.abs(raw_counts - arr)  # MxN matrix of absolute diffs from arr
+            cells_within_limit = (
+                abs_err <= max_diffs
+            )  # MxN matrix of booleans saying whether diff is allowable
+            entire_row_within_limits = cells_within_limit.all(
+                axis=1
+            )  # Mx1 array of bools for whether row is similar
+            n_rows_within_limits = (
+                entire_row_within_limits.sum()
+            )  # scalar count of how many rows were similar
+            return n_rows_within_limits
+
+        # set a random seed for reproducibility
+        rng = np.random.RandomState(seed=self.random_seed)
+
+        # pivot the counts for the ground truth
+        pivoted_gt = _count_shift_and_pickup_areas(self.ground_truth)
+        n_gt, n_cols = pivoted_gt.shape
+        assert n_cols == 99
+        # pivot the counts for the privatized
+        pivoted_dp = _count_shift_and_pickup_areas(self.submitted)
+        # make sure the submitted has the same columns as the ground truth
+        pivoted_dp = (
+            pivoted_dp.reindex(columns=pivoted_gt.columns)
+            .fillna(0)
+            .values.astype(np.int)
+        )
+        pivoted_gt = pivoted_gt.values
+        n_dp, n_cols = pivoted_dp.shape
+        assert n_cols == 99
+
+        # initialize holders for counting how many individuals are similar in each data set
+        n_similar_gt = np.zeros(n_iters, dtype=np.int)
+        n_similar_dp = np.zeros(n_iters, dtype=np.int)
+        for i in trange(n_iters):
+            # choose an individual from the ground truth to represent an archetypal individual
+            random_individual = pivoted_gt[rng.randint(low=0, high=n_gt)]
+            # come up with varying "difficulties" for each feature of the count vector to count as similar
+            # to the randomly selected individual
+            max_diff_to_qualify_as_similar = rng.randint(
+                MIN_HOC_DIFF, MAX_HOC_DIFF + 1, size=n_cols
+            )
+            # number of rows in the ground truth "like" this row
+            n_similar_gt[i] = _count_up_how_many_rows_are_similar(
+                pivoted_gt, random_individual, max_diff_to_qualify_as_similar
+            )
+            # number of rows in the privatized "like" this row
+            n_similar_dp[i] = _count_up_how_many_rows_are_similar(
+                pivoted_dp, random_individual, max_diff_to_qualify_as_similar
+            )
+
+        # normalize the absolute counts into proportions of all individuals who are similar
+        prop_gt = n_similar_gt / n_gt
+        prop_dp = n_similar_dp / n_dp
+        logger.debug(
+            f"proportion errors for each of {n_iters} iterations: {(prop_gt - prop_dp).round(4)}"
+        )
+        # calculate the MAE in [0, 1] where lower is better
+        mean_absolute_error = np.abs(prop_gt - prop_dp).mean()
+        # reverse direction to higher is better
+        return 1.0 - mean_absolute_error
+
     def overall_score(self):
-        # get the matrix of scores for each PUMA-YEAR (row) and k-col permutation (col)
-        all_scores = self.k_marginal_scores()
-        # take the row-wise mean to get the score per PUMA-YEAR
-        self._scores = all_scores.mean(axis=1).ravel()
-        # any individual PUMA-YEARs over the bias limit get the maximum penalty
-        bias_mask = self.get_bias_mask()
-        self._scores[bias_mask] = 2.0
-        # return the mean of the scores per PUMA-YEAR for an overall score
-        mean_score = self._scores.mean()
-        nist_score = ((2.0 - mean_score) / 2.0) * 1_000
-        return nist_score
+        logger.info("computing k-marginals...")
+        k_marginal_score = self.scaled_k_marginal_score()
+        self.report["k_marginal_score"] = k_marginal_score
+        logger.success(f"RESULT [KMARGINAL]: {k_marginal_score}")
+
+        logger.info("computing pickup-dropoff marginal...")
+        pickup_dropoff_score = self.pickup_dropoff_score()
+        self.report["pickup_dropoff_score"] = pickup_dropoff_score
+        logger.success(f"RESULT [SPATIAL]: {pickup_dropoff_score}")
+
+        logger.info("computing higher order conjunction...")
+        higher_order_conjunction_score = self.higher_order_conjunction()
+        self.report["higher_order_conjunction"] = higher_order_conjunction_score
+        logger.success(f"RESULT [HOC]: {higher_order_conjunction_score}")
+
+        overall_score = 1000.0 * np.mean(
+            [k_marginal_score, pickup_dropoff_score, higher_order_conjunction_score]
+        )
+        return overall_score
 
 
 def score_submission(
     ground_truth_csv: Path,
     submission_csv: Path,
-    k: int = typer.Option(
-        2, help="Number of columns (in addition to PUMA and YEAR) to marginalize on"
-    ),
-    n_permutations: int = typer.Option(
-        50, help="Number of different permutations of columns to average"
-    ),
-    bias_penalty_cutoff: int = typer.Option(
-        250,
-        help="Absolute difference in PUMA-YEAR counts permitted before applying bias penalty",
-    ),
     parameters_json: Path = typer.Option(
         None,
         help="Path to parameters.json; if provided, validates the submission using the schema",
     ),
     report_path: Path = typer.Option(
         None,
-        help="Output path to save a JSON report file detailing scores at the PUMA-YEAR level",
+        help="Output path to save a JSON report file detailing scores at the place/time level",
     ),
     processes: int = typer.Option(None, help="Number of parallel processes to run"),
-    verbose: bool = True,
 ):
     """
     Given the ground truth and a valid submission, compute the k-marginal score which the user would receive.
@@ -286,33 +421,38 @@ def score_submission(
     logger.info(f"reading in submission from {submission_csv}")
 
     try:
-        submission_df = pd.read_csv(submission_csv, dtype=COLS)
+        submission_df = pd.read_csv(submission_csv, dtype=COL_TYPES)
     except TypeError as e:
         logger.error(f"Column {e} could not be read in as the expected data type")
         raise typer.Exit(1)
 
     if parameters_json is not None:
-        logger.debug(f"validating submission ...")
+        logger.debug("validating submission ...")
         parameters = json.loads(parameters_json.read_text())
-        logger.debug(f"checking that submission matches schema ...")
+        logger.debug("checking that submission matches schema ...")
         TidyFormatKMarginalMetric._assert_sub_matches_schema(submission_df, parameters)
         logger.debug(
-            f"checking that submission meets length limits and has proper epsilons ..."
+            "checking that submission meets length limits and has proper epsilons ..."
         )
         TidyFormatKMarginalMetric._assert_sub_less_than_limit_and_epsilons_valid(
             submission_df, parameters
         )
         logger.success("... submission is valid ✓")
 
+    logger.debug("binning submission")
+    submission_df = bin_numerics(submission_df)
+
     logger.info(f"reading in ground truth from {ground_truth_csv}")
-    ground_truth_df = pd.read_csv(ground_truth_csv, dtype=COLS)
+    ground_truth_df = pd.read_csv(ground_truth_csv, dtype=COL_TYPES)
+    logger.debug("binning ground truth")
+    ground_truth_df = bin_numerics(ground_truth_df)
 
     if "epsilon" not in submission_df.columns:
         submission_df["epsilon"] = None  # placeholder
 
     epsilons = submission_df["epsilon"].unique()
     scores_per_epsilon = []
-    report = {"details": []}
+    report = {"details": [], "per_epsilon": []}
     for epsilon in epsilons:
         epsilon_mask = submission_df.epsilon == epsilon
         n_rows = epsilon_mask.sum()
@@ -321,30 +461,22 @@ def score_submission(
         )
         metric = TidyFormatKMarginalMetric(
             raw_actual_df=ground_truth_df,
-            raw_submitted_df=submission_df.loc[epsilon_mask],
-            k=k,
-            n_permutations=n_permutations,
-            bias_penalty_cutoff=bias_penalty_cutoff,
-            bins_for_numeric_cols=BINS,
-            verbose=verbose,
+            raw_submitted_df=submission_df.loc[epsilon_mask, :],
             processes=processes,
         )
 
         logger.info(f"starting calculation for epsilon={epsilon}")
         epsilon_score = metric.overall_score()
-        if metric.bias_mask.sum():
-            logger.warning(
-                f"warning: {metric.bias_mask.sum()} PUMA-YEARs received a bias penalty"
-            )
 
         # save out some records from this run if the user would like to output a report
         if report_path is not None:
-            for i, ((puma, year), bias) in enumerate(metric.bias_mask.items()):
-                nist_score = ((2.0 - metric._scores[i]) / 2.0) * 1_000
+            report["per_epsilon"].append(metric.report)
+            for (place, time), bias in metric.bias_mask.items():
+                nist_score = ((2.0 - metric._scores.loc[(place, time)]) / 2.0) * 1_000
                 record = {
                     "epsilon": epsilon,
-                    "PUMA": puma,
-                    "YEAR": year,
+                    "place": place,
+                    "time": time,
                     "score": nist_score,
                     "bias_penalty": bias,
                 }

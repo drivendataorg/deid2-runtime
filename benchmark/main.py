@@ -1,9 +1,9 @@
 import csv
 import json
-import random
 from pathlib import Path
 
 from loguru import logger
+import numpy as np
 import pandas as pd
 from tqdm import trange
 import typer
@@ -17,19 +17,24 @@ DEFAULT_PARAMS = DATA_DIRECTORY / "parameters.json"
 DEFAULT_OUTPUT = ROOT_DIRECTORY / "submission.csv"
 
 
-def simulate_row(parameters):
+def simulate_row(parameters, epsilon=None, taxi_id=None):
     """
     Naively create a valid row by picking random but valid values using the parameters file.
     """
     row = {}
+    if epsilon is not None:
+        row["epsilon"] = epsilon
+    if taxi_id is not None:
+        row["taxi_id"] = taxi_id
     for col, d in parameters["schema"].items():
+        if col == "taxi_id":
+            continue
         value = 0
         if "values" in d:
-            value = random.choice(d["values"])
+            value = np.random.choice(d["values"])
         elif "min" in d:
-            value = random.randint(d["min"], d["max"])
-        elif col in {"INCTOT", "INCWAGE", "INCEARN"}:
-            value = random.randint(0, 60_000)
+            if "int" in d["dtype"]:
+                value = d["min"]
         row[col] = value
     return row
 
@@ -60,8 +65,8 @@ def main(
     logger.info(f"... read ground truth dataframe of shape {ground_truth.shape}")
 
     epsilons = [run["epsilon"] for run in parameters["runs"]]
-    columns = list(parameters["schema"].keys())
-    headers = ["epsilon"] + columns + ["sim_individual_id"]
+    columns = [k for k in parameters["schema"].keys() if k != "taxi_id"]
+    headers = ["epsilon", "taxi_id"] + columns
 
     # start writing the CSV with headers
     logger.info(f"writing output to {output_file}")
@@ -70,19 +75,26 @@ def main(
             fp, fieldnames=headers, dialect="unix", quoting=csv.QUOTE_NONNUMERIC
         )
         output.writeheader()
-        n_rows = 1
+
+        n_rows = 0
         for epsilon in epsilons:
-            logger.info(f"starting simulation for epsilon={epsilon}")
-            for i in trange(n_rows_to_simulate_per_epsilon):
-                ################################################################################
-                # NOTE: Naively assume only one row per individual (and lazily use iteration   #
-                #       number as the simulated individual ID).                                #
-                ################################################################################
-                row = simulate_row(parameters)
-                row["epsilon"] = epsilon
-                row["sim_individual_id"] = i
+            current_individual_id = 10_000_000 - 1
+            n_records_left_for_current_individual = 0
+            for _ in trange(n_rows_to_simulate_per_epsilon):
+                # see if we need to switch to a new individual
+                if n_records_left_for_current_individual <= 0:
+                    next_individual_records = int(np.random.normal(55, 25))
+                    n_records_left_for_current_individual = max(1, next_individual_records)
+                    # increment which individual we're talking about
+                    current_individual_id += 1
+                # simulate the row
+                row = simulate_row(parameters, epsilon=epsilon, taxi_id=current_individual_id)
+                # write it to STDOUT
                 output.writerow(row)
+                # decrement the counter for our current individual
+                n_records_left_for_current_individual -= 1
                 n_rows += 1
+
     logger.success(f"finished writing {n_rows:,} rows to {output_file}")
 
     logger.info("reading and writing one final time casting to correct dtypes ...")
@@ -90,7 +102,7 @@ def main(
     for col_name, d in parameters["schema"].items():
         df[col_name] = df[col_name].astype(d["dtype"])
     df.to_csv(output_file, index=False)
-    logger.success(f"... done.")
+    logger.success("... done.")
 
 
 if __name__ == "__main__":
