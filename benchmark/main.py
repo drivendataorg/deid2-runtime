@@ -29,12 +29,10 @@ def simulate_row(parameters, epsilon=None, taxi_id=None):
     for col, d in parameters["schema"].items():
         if col == "taxi_id":
             continue
-        value = 0
         if "values" in d:
             value = np.random.choice(d["values"])
         elif "min" in d:
-            if "int" in d["dtype"]:
-                value = d["min"]
+            value = 0
         row[col] = value
     return row
 
@@ -43,7 +41,7 @@ def main(
     parameters_file: Path = DEFAULT_PARAMS,
     ground_truth_file: Path = DEFAULT_GROUND_TRUTH,
     output_file: Path = DEFAULT_OUTPUT,
-    n_rows_to_simulate_per_epsilon: int = 20_000,
+    n_rows_to_simulate_per_epsilon: int = 100,
 ):
     """
     Create synthetic data appropriate to be submitted to the Sprint 2 competition.
