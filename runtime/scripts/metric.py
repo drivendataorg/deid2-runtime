@@ -66,7 +66,7 @@ MARGINAL_COLS = [
 PICKUP_DROPOFF_COLS = ["pickup_community_area", "dropoff_community_area"]
 
 # kmarginal constants
-K_MARGINAL_BIAS_PENALTY_CUTOFF = 250
+K_MARGINAL_BIAS_PENALTY_MINIMUM = 250
 PERMUTATIONS = [
     ALWAYS_GROUP_BY + [c1, c2]
     for c1 in MARGINAL_COLS
@@ -270,9 +270,13 @@ class TidyFormatKMarginalMetric:
         return scaled_score
 
     def get_bias_mask(self):
+        # count how many trips there were for each place/time
         counts = _get_counts(ALWAYS_GROUP_BY)
+        # absolute error is allowed to be 500 or 5% of ground truth, whichever is larger
+        allowable_errors = np.clip(counts.iloc[:, 1] * 0.05, a_min=K_MARGINAL_BIAS_PENALTY_MINIMUM, a_max=np.inf)
+        # calculate the absolute error
         abs_errors = counts.diff(axis=1).sum(axis=1).abs()
-        self.bias_mask = abs_errors >= K_MARGINAL_BIAS_PENALTY_CUTOFF
+        self.bias_mask = abs_errors >= allowable_errors
         return self.bias_mask
 
     def pickup_dropoff_score(self):
