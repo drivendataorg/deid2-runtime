@@ -66,7 +66,6 @@ MARGINAL_COLS = [
 PICKUP_DROPOFF_COLS = ["pickup_community_area", "dropoff_community_area"]
 
 # kmarginal constants
-K_MARGINAL_BIAS_PENALTY_MINIMUM = 250
 PERMUTATIONS = [
     ALWAYS_GROUP_BY + [c1, c2]
     for c1 in MARGINAL_COLS
@@ -127,9 +126,9 @@ class TidyFormatKMarginalMetric:
         self.processes = processes
         self.report = {}
 
-        # combine the dataframes into one, groupable df
         self.ground_truth = raw_actual_df
         self.submitted = raw_submitted_df
+
         PRECALC_GT_DIR.mkdir(exist_ok=True, parents=True)
         logger.info(f"created working directory at {PRECALC_DIR}")
         if PRECALC_DP_DIR.exists():
@@ -219,8 +218,6 @@ class TidyFormatKMarginalMetric:
         todo = PERMUTATIONS + [
             # for the pickup/dropoff part of the metric
             PICKUP_DROPOFF_COLS,
-            # for bias mask
-            ALWAYS_GROUP_BY,
         ]
         logger.info("precomputing ground truth counts for each permutations ...")
         for perm in tqdm(todo):
@@ -255,29 +252,11 @@ class TidyFormatKMarginalMetric:
         score_df = self.k_marginal_scores()
         # take the row-wise mean to get the score per place/time
         self._scores = score_df.mean(axis=1)
-        # any individual place/time over the bias limit get the maximum penalty
-        bias_mask = self.get_bias_mask()
-        bias_idxs = bias_mask[bias_mask].index
-        if bias_mask.sum():
-            logger.warning(
-                f"warning: {bias_mask.sum()} place/times received a bias penalty"
-            )
-        self._scores.loc[bias_idxs] = 2.0
         # get the mean of the scores per place/time for an overall score
         raw_score = self._scores.mean()
         # scale to [0, 1] and reverse direction so higher is better
         scaled_score = (2.0 - raw_score) / 2.0
         return scaled_score
-
-    def get_bias_mask(self):
-        # count how many trips there were for each place/time
-        counts = _get_counts(ALWAYS_GROUP_BY)
-        # absolute error is allowed to be 500 or 5% of ground truth, whichever is larger
-        allowable_errors = np.clip(counts.iloc[:, 1] * 0.05, a_min=K_MARGINAL_BIAS_PENALTY_MINIMUM, a_max=np.inf)
-        # calculate the absolute error
-        abs_errors = counts.diff(axis=1).sum(axis=1).abs()
-        self.bias_mask = abs_errors >= allowable_errors
-        return self.bias_mask
 
     def pickup_dropoff_score(self):
         counts = _get_counts(PICKUP_DROPOFF_COLS)
@@ -403,6 +382,7 @@ class TidyFormatKMarginalMetric:
         overall_score = 1000.0 * np.mean(
             [k_marginal_score, pickup_dropoff_score, higher_order_conjunction_score]
         )
+        logger.success(f"RESULT [OVERALL]: {overall_score}")
         return overall_score
 
 
@@ -475,16 +455,6 @@ def score_submission(
         # save out some records from this run if the user would like to output a report
         if report_path is not None:
             report["per_epsilon"].append(metric.report)
-            for (place, time), bias in metric.bias_mask.items():
-                nist_score = ((2.0 - metric._scores.loc[(place, time)]) / 2.0) * 1_000
-                record = {
-                    "epsilon": epsilon,
-                    "place": place,
-                    "time": time,
-                    "score": nist_score,
-                    "bias_penalty": bias,
-                }
-                report["details"].append(record)
 
         logger.success(f"score for epsilon {epsilon}: {epsilon_score}")
         scores_per_epsilon.append(epsilon_score)
