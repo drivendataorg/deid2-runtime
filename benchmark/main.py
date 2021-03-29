@@ -16,6 +16,8 @@ DEFAULT_GROUND_TRUTH = DATA_DIRECTORY / "ground_truth.csv"
 DEFAULT_PARAMS = DATA_DIRECTORY / "parameters.json"
 DEFAULT_OUTPUT = ROOT_DIRECTORY / "submission.csv"
 
+NOT_USED_IN_SUBMISSION = ("trip_hour_of_day", "trip_day_of_week")
+
 
 def simulate_row(parameters, epsilon=None, taxi_id=None):
     """
@@ -27,7 +29,7 @@ def simulate_row(parameters, epsilon=None, taxi_id=None):
     if taxi_id is not None:
         row["taxi_id"] = taxi_id
     for col, d in parameters["schema"].items():
-        if col in ("taxi_id", "trip_hour_of_day", "trip_day_of_week"):
+        if col == "taxi_id" or col in NOT_USED_IN_SUBMISSION:
             continue
         if "values" in d:
             value = np.random.choice(d["values"])
@@ -63,8 +65,10 @@ def main(
     logger.info(f"... read ground truth dataframe of shape {ground_truth.shape}")
 
     epsilons = [run["epsilon"] for run in parameters["runs"]]
-    columns = [k for k in parameters["schema"].keys() if k != "taxi_id"]
-    headers = ["epsilon", "taxi_id"] + columns
+    columns = [
+        k for k in parameters["schema"].keys() if k not in NOT_USED_IN_SUBMISSION
+    ]
+    headers = ["epsilon"] + columns
 
     # start writing the CSV with headers
     logger.info(f"writing output to {output_file}")
@@ -82,11 +86,15 @@ def main(
                 # see if we need to switch to a new individual
                 if n_records_left_for_current_individual <= 0:
                     next_individual_records = int(np.random.normal(55, 25))
-                    n_records_left_for_current_individual = max(1, next_individual_records)
+                    n_records_left_for_current_individual = max(
+                        1, next_individual_records
+                    )
                     # increment which individual we're talking about
                     current_individual_id += 1
                 # simulate the row
-                row = simulate_row(parameters, epsilon=epsilon, taxi_id=current_individual_id)
+                row = simulate_row(
+                    parameters, epsilon=epsilon, taxi_id=current_individual_id
+                )
                 # write it to STDOUT
                 output.writerow(row)
                 # decrement the counter for our current individual
@@ -98,6 +106,8 @@ def main(
     logger.info("reading and writing one final time casting to correct dtypes ...")
     df = pd.read_csv(output_file)
     for col_name, d in parameters["schema"].items():
+        if col_name in NOT_USED_IN_SUBMISSION:
+            continue
         df[col_name] = df[col_name].astype(d["dtype"])
     df.to_csv(output_file, index=False)
     logger.success("... done.")

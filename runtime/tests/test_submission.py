@@ -11,6 +11,8 @@ DATA_DIRECTORY = ROOT_DIRECTORY / "data"
 PARAMETERS_PATH = DATA_DIRECTORY / "parameters.json"
 SUBMISSION_PATH = ROOT_DIRECTORY / "submission.csv"
 
+NOT_USED_IN_SUBMISSION = ("trip_hour_of_day", "trip_day_of_week")
+
 
 @pytest.fixture(scope="session")
 def submission():
@@ -37,8 +39,10 @@ def test_second_column_is_taxi_id(submission):
 
 
 def test_all_columns_match(submission, parameters):
-    columns = [k for k in parameters["schema"].keys() if k != "taxi_id"]
-    expected_data_columns = ["epsilon", "taxi_id"] + columns
+    columns = [
+        k for k in parameters["schema"].keys() if k not in NOT_USED_IN_SUBMISSION
+    ]
+    expected_data_columns = ["epsilon"] + columns
     found_data_columns = submission.columns.tolist()
     assert (
         found_data_columns == expected_data_columns
@@ -47,6 +51,8 @@ def test_all_columns_match(submission, parameters):
 
 def test_submission_matches_schema(submission, parameters):
     for c, entry in parameters["schema"].items():
+        if c in NOT_USED_IN_SUBMISSION:
+            continue
         assert (
             c in submission.columns
         ), f"expected column {c} to be in data but it was not present"
@@ -108,6 +114,8 @@ def test_epsilons_valid(submission, parameters):
 
 def test_data_types_usable(submission, parameters):
     for c, entry in parameters["schema"].items():
+        if c in NOT_USED_IN_SUBMISSION:
+            continue
         try:
             submission[c].astype(entry["dtype"])
         except (ValueError, TypeError):
@@ -116,6 +124,8 @@ def test_data_types_usable(submission, parameters):
 
 def test_all_float_values_are_finite(submission, parameters):
     for c, entry in parameters["schema"].items():
+        if c in NOT_USED_IN_SUBMISSION:
+            continue
         dtype = entry["dtype"]
         if "float" in dtype:
             assert np.isfinite(
