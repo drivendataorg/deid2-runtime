@@ -13,28 +13,28 @@ from tqdm import tqdm, trange
 import multiprocessing
 
 COL_TYPES = {
-    "company_id": "int8",
-    "dropoff_community_area": "int8",
-    "fare": "int16",
-    "payment_type": "int8",
-    "pickup_community_area": "int8",
-    "shift": "uint8",
-    "tips": "int16",
     "trip_day_of_week": "int8",
     "trip_hour_of_day": "int8",
+    "shift": "uint8",
+    "company_id": "int8",
+    "pickup_community_area": "int8",
+    "dropoff_community_area": "int8",
+    "payment_type": "int8",
+    "fare": "int16",
+    "tips": "int16",
     "trip_miles": "int16",
     "trip_seconds": "int32",
     "trip_total": "int16",
 }
 
 CATEGORICAL_COLS = [
+    "shift",
     "company_id",
     "pickup_community_area",
     "dropoff_community_area",
+    "payment_type",
     "trip_day_of_week",
     "trip_hour_of_day",
-    "shift",
-    "payment_type",
 ]
 
 NUMERIC_COLS = [
