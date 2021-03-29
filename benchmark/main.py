@@ -27,7 +27,7 @@ def simulate_row(parameters, epsilon=None, taxi_id=None):
     if taxi_id is not None:
         row["taxi_id"] = taxi_id
     for col, d in parameters["schema"].items():
-        if col == "taxi_id":
+        if col in ("taxi_id", "trip_hour_of_day", "trip_day_of_week"):
             continue
         if "values" in d:
             value = np.random.choice(d["values"])
