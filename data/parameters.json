@@ -16,7 +16,9 @@
   "schema": {
     "taxi_id": {
       "dtype": "int64",
-      "kind": "id"
+      "kind": "id",
+      "min": 1000000,
+      "max": 9999999
     },
     "shift": {
       "dtype": "uint8",

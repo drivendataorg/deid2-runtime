@@ -80,7 +80,7 @@ def main(
 
         n_rows = 0
         for epsilon in epsilons:
-            current_individual_id = 10_000_000 - 1
+            current_individual_id = 1_000_000 - 1
             n_records_left_for_current_individual = 0
             for _ in trange(n_rows_to_simulate_per_epsilon):
                 # see if we need to switch to a new individual
