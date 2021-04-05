@@ -13,7 +13,6 @@ This repository has three primary uses for competitors:
     * A [sample privacy write-up](https://github.com/drivendataorg/deid2-runtime/tree/master/references)
     * A number of useful [scripts](https://github.com/drivendataorg/deid2-runtime/tree/master/runtime/scripts), including:
         * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/metric.py) for local testing
-        * A [score visualizer](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/create_visualization.py) that generates an HTML file displaying score outputs by map and time segments
 
  - **Testing your code submission**: It lets you test your `submission.zip` file with a locally running version of the container so you don't have to wait for it to process on the competition site to find programming errors.
  - **Requesting new packages in the official runtime**: It lets you test adding additional packages to the official runtime [Python](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/py-gpu.yml) and [R](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/r-gpu.yml) environments. The official runtime uses **Python 3.8.5** or **R 4.0.2**. You can then submit a PR to request compatible packages be included in the official container image.
@@ -339,49 +338,6 @@ python runtime/scripts/metric.py \
   --report-path /tmp/report.json \
   data/ground_truth.csv \
   /tmp/submission.csv 
-```
-
----
-
-### `runtime/scripts/create_visualization.py`
-
-Given the score report output above, generate a useful visualization which may
-be helpful for troubleshooting where the privatization needs attention. If you open
-the generated HTML file in your browser and let it load, you should see a choropleth
-of Ohio and Illinois, the two states in the public data:
-
-![](https://drivendata-competition-deid2-public.s3.amazonaws.com/visualization/screenshot2.png)
-
-This script assumes that you have run the `metric.py` scoring script with the `--report-json`
-option to generate a detailed summary of results per epsilon and PUMA-YEAR.
-
-#### Usage
-
-```
-Usage: create_visualization.py [OPTIONS] JSON_REPORT PARAMS_FILE
-
-  Take the output of a `score.py` run and create an interactive HTML/JS
-  visualization.
-
-Arguments:
-  JSON_REPORT  [required]
-  PARAMS_FILE  [required]
-
-Options:
-  --template-path PATH [only used for testing, or if you'd like to tweak the template]
-
-  --help                          Show this message and exit.
-```
-
-#### Example for local use
-
-We pass in the report created above, the parameters file, and send the output to
-a file that we can open locally in the browser.
-
-```
-python runtime/scripts/create_visualization.py \
-  /tmp/report.json data/parameters.json \
-  > /tmp/report.html
 ```
 
 ---
