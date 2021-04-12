@@ -3,13 +3,13 @@
     {
       "epsilon": 1.0,
       "delta": 2.5e-05,
-      "max_records": 17000000,
+      "max_records": 20000000,
       "max_records_per_individual": 200
     },
     {
       "epsilon": 10.0,
       "delta": 2.5e-05,
-      "max_records": 17000000,
+      "max_records": 20000000,
       "max_records_per_individual": 200
     }
   ],
