@@ -64,6 +64,7 @@ MARGINAL_COLS = [
     "trip_miles",
 ]
 PICKUP_DROPOFF_COLS = ["pickup_community_area", "dropoff_community_area"]
+NOT_USED_IN_SUBMISSION = ("trip_hour_of_day", "trip_day_of_week")
 
 # kmarginal constants
 PERMUTATIONS = [
@@ -141,6 +142,8 @@ class TidyFormatKMarginalMetric:
         schema = parameters["schema"]
         schema_errors = defaultdict(list)
         for c, conds in schema.items():
+            if c in NOT_USED_IN_SUBMISSION:
+                continue
             if c not in submission_df.columns:
                 schema_errors[c] += [
                     f"expected column {c} in data but it was not present"
