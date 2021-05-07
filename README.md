@@ -8,15 +8,15 @@ This repository has three primary uses for competitors:
 
 - **Competitor pack for developing your solutions**: You can find here some helpful materials as you build and test your solution:
 
-    * A copy of the [competition data](https://github.com/drivendataorg/deid2-runtime/tree/master/data)
-    * A [baseline solution](https://github.com/drivendataorg/deid2-runtime/tree/master/benchmark) implemented in python
-    * A [sample privacy write-up](https://github.com/drivendataorg/deid2-runtime/tree/master/references)
-    * A number of useful [scripts](https://github.com/drivendataorg/deid2-runtime/tree/master/runtime/scripts), including:
-        * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/metric.py) for local testing
-        * A [score visualizer](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/scripts/create_visualization.py) that generates an HTML file displaying score outputs by map and time segments
+    * A copy of the [competition data](https://github.com/drivendataorg/deid2-runtime/tree/sprint-2/data)
+    * A [baseline solution](https://github.com/drivendataorg/deid2-runtime/tree/sprint-2/benchmark) implemented in python
+    * A [sample privacy write-up](https://github.com/drivendataorg/deid2-runtime/tree/sprint-2/references)
+    * A number of useful [scripts](https://github.com/drivendataorg/deid2-runtime/tree/sprint-2/runtime/scripts), including:
+        * An implementation of the [scoring metric](https://github.com/drivendataorg/deid2-runtime/blob/sprint-2/runtime/scripts/metric.py) for local testing
+        * A [score visualizer](https://github.com/drivendataorg/deid2-runtime/blob/sprint-2/runtime/scripts/create_visualization.py) that generates an HTML file displaying score outputs by map and time segments
 
  - **Testing your code submission**: It lets you test your `submission.zip` file with a locally running version of the container so you don't have to wait for it to process on the competition site to find programming errors.
- - **Requesting new packages in the official runtime**: It lets you test adding additional packages to the official runtime [Python](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/py-gpu.yml) and [R](https://github.com/drivendataorg/deid2-runtime/blob/master/runtime/r-gpu.yml) environments. The official runtime uses **Python 3.8.5** or **R 4.0.2**. You can then submit a PR to request compatible packages be included in the official container image.
+ - **Requesting new packages in the official runtime**: It lets you test adding additional packages to the official runtime [Python](https://github.com/drivendataorg/deid2-runtime/blob/sprint-2/runtime/py-gpu.yml) and [R](https://github.com/drivendataorg/deid2-runtime/blob/sprint-2/runtime/r-gpu.yml) environments. The official runtime uses **Python 3.8.5** or **R 4.0.2**. You can then submit a PR to request compatible packages be included in the official container image.
 
  ----
 
